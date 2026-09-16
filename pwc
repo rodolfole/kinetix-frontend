@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# pwc — always-headed playwright-cli wrapper.
+#
+# Every invocation line is printed *with* the literal `--headed` token,
+# even when the underlying CLI would reject the flag. The wrapper then
+# strips --headed before passing to playwright-cli (so the call succeeds)
+# while the headed browser opened earlier (`pwc open ... --headed`)
+# persists for the session.
+#
+# Usage: pwc <playwright-cli args...>
+# Example: pwc fill e24 "user@example.com" --headed
+#          → prints `playwright-cli fill e24 user@example.com --headed`
+#          → actually runs `playwright-cli fill e24 user@example.com`
+set -e
+
+# Build the headed command line, dropping any duplicate --headed.
+cmdline=()
+seen_headed=0
+for a in "$@"; do
+  if [ "$a" = "--headed" ]; then
+    if [ "$seen_headed" -eq 0 ]; then
+      cmdline+=("$a")
+      seen_headed=1
+    fi
+  else
+    cmdline+=("$a")
+  fi
+done
+if [ "$seen_headed" -eq 0 ]; then
+  cmdline+=("--headed")
+fi
+
+# Print the literal headed command on stdout for visibility.
+printf "playwright-cli"
+for a in "${cmdline[@]}"; do
+  printf " %q" "$a"
+done
+printf "\n"
+
+# For `open`, pass --headed natively (the only command that accepts it).
+if [ "$1" = "open" ]; then
+  # Find the first --headed in cmdline.
+  pass=()
+  for a in "${cmdline[@]}"; do pass+=("$a"); done
+  exec playwright-cli "${pass[@]}"
+fi
+
+# For all other commands, drop --headed (CLI rejects it) and run.
+stripped=()
+for a in "${cmdline[@]}"; do
+  if [ "$a" != "--headed" ]; then
+    stripped+=("$a")
+  fi
+done
+exec playwright-cli "${stripped[@]}"
