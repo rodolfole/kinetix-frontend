@@ -1,0 +1,20 @@
+---
+import Layout from '@layouts/Layout.astro';
+import { Footer, Navbar } from '@shared/components';
+import '../styles/global.css';
+
+export interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Kinetix - Running Events Platform' } = Astro.props;
+---
+
+<Layout title={title} description={description}>
+  <Navbar />
+  <main class="mx-auto min-h-screen">
+    <slot />
+  </main>
+  <Footer />
+</Layout>

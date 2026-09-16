@@ -1,0 +1,66 @@
+---
+import '../styles/starwind.css';
+import { ClientRouter } from 'astro:transitions';
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from '@/components/starwind/sidebar';
+import { DashboardSidebar, UserActions } from '@features/dashboard/components';
+
+export interface Props {
+  title: string;
+}
+
+// El middleware ya verificó la auth - aquí solo necesitamos los datos del usuario
+const userCookie = Astro.cookies.get('user');
+let user = null;
+if (userCookie?.value) {
+  try {
+    user = JSON.parse(userCookie.value);
+  } catch {
+    // Si falla el parse, el middleware ya habrá redirect
+  }
+}
+
+const sidebarItems = [
+  { icon: 'layout-dashboard', label: 'Dashboard', href: '/dashboard', active: Astro.url.pathname === '/dashboard' },
+  { icon: 'calendar', label: 'My Events', href: '/dashboard/events', active: Astro.url.pathname.startsWith('/dashboard/events') && !Astro.url.pathname.includes('/new') && !Astro.url.pathname.includes('/edit') },
+  { icon: 'plus-circle', label: 'Create Event', href: '/dashboard/events/new', active: Astro.url.pathname.includes('/dashboard/events/new') },
+  { icon: 'users', label: 'Participants', href: '/dashboard/participants', active: Astro.url.pathname.startsWith('/dashboard/participants') },
+  { icon: 'bar-chart', label: 'Reports', href: '/dashboard/reports', active: Astro.url.pathname.startsWith('/dashboard/reports') },
+  { icon: 'settings', label: 'Settings', href: '/dashboard/settings', active: Astro.url.pathname.startsWith('/dashboard/settings') },
+];
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <ClientRouter />
+</head>
+<body>
+  <SidebarProvider defaultOpen={true}>
+    <div class="flex min-h-screen w-full">
+      <DashboardSidebar items={sidebarItems} />
+      <SidebarInset>
+        <header class="flex h-12 shrink-0 items-center gap-2 border-b px-4 bg-background sticky top-0 z-40">
+          <SidebarTrigger />
+          <h2 class="text-lg font-semibold">{title}</h2>
+          <div class="ml-auto">
+            <UserActions user={user || undefined} />
+          </div>
+        </header>
+
+        <div class="flex-1 p-6">
+          <slot />
+        </div>
+      </SidebarInset>
+    </div>
+  </SidebarProvider>
+</body>
+</html>
