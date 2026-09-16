@@ -1,0 +1,199 @@
+---
+import { Button } from '@/components/starwind/button';
+import { Input } from '@/components/starwind/input';
+import { Label } from '@/components/starwind/label';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/starwind/select';
+import MainLayout from '@layouts/MainLayout.astro';
+import { isAuthenticated } from '@/lib/auth';
+import { Form } from '@shared/components/forms';
+import RequiredField from '@shared/components/forms/RequiredField.astro';
+
+// Obtener redirect desde la URL (query param)
+const redirectFromUrl = Astro.url.searchParams.get('redirect');
+
+// Si ya está autenticado, redirigir según role
+const accessToken = Astro.cookies.get('access_token');
+const userCookie = Astro.cookies.get('user');
+
+if (accessToken?.value && userCookie?.value) {
+  try {
+    const user = JSON.parse(userCookie.value);
+    if (redirectFromUrl) {
+      // Si es un event slug, agregar registration
+      return Astro.redirect(`/events/${redirectFromUrl}/registration`);
+    }
+    if (user?.role === 'participant') {
+      return Astro.redirect('/participant/dashboard');
+    }
+    return Astro.redirect('/dashboard');
+  } catch {
+    // Si falla el parse, permitir registro
+  }
+}
+
+
+if (isAuthenticated(Astro) && redirectFromUrl) {
+  return Astro.redirect(`/events/${redirectFromUrl}/registration`);
+}
+
+const pageTitle = 'Crear Cuenta';
+const pageDescription = 'Regístrate para poder inscribirte a los eventos de Kinetix';
+
+const GENDER_OPTIONS = [
+  { label: 'Masculino', value: 'male'},
+  { label: 'Femenino', value: 'female'},
+  { label: 'Otro', value: 'other'},
+]
+---
+
+<MainLayout title={pageTitle} description={pageDescription}>
+  <main class="pt-24 pb-20 px-4 md:px-6 min-h-screen bg-zinc-50/50">
+    <div class="max-w-2xl mx-auto">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-3xl md:text-4xl font-black text-foreground tracking-tight">
+          Crear Cuenta
+        </h1>
+        <p class="text-muted-foreground mt-2">
+          {redirectFromUrl ? 'Completa tu registro para inscribirte al evento' : 'Regístrate para poder inscribirte a los eventos de Kinetix'}
+        </p>
+      </div>
+
+      <!-- Form -->
+      <Form id="register-form" class="space-y-6 bg-white p-8 rounded-2xl shadow-sm border">
+        
+        <input type="hidden" name="redirect" value={redirectFromUrl || ''} />
+
+        <!-- Nombre y Apellidos -->
+        <div class="grid gap-6 md:grid-cols-3">
+          <div class="space-y-2">
+            <Label for="first_name">Nombre <RequiredField /></Label>
+            <Input id="first_name" name="first_name" placeholder="Juan" />
+          </div>
+          <div class="space-y-2">
+            <Label for="last_name">Apellido Paterno <RequiredField /></Label>
+            <Input id="last_name" name="last_name" placeholder="Pérez" />
+          </div>
+          <div class="space-y-2">
+            <Label for="second_last_name">Apellido Materno</Label>
+            <Input id="second_last_name" name="second_last_name" placeholder="García" />
+          </div>
+        </div>
+
+        <!-- Fecha de Nacimiento -->
+        <div class="grid gap-6 md:grid-cols-2">
+          <div class="space-y-2">
+            <Label for="birth_date">Fecha de Nacimiento <RequiredField /></Label>
+            <Input id="birth_date" name="birth_date" type="date" />
+          </div>
+          <div class="space-y-2">
+            <Label for="gender">Género <RequiredField /></Label>
+            <Select name="gender" id="gender" required>
+              <SelectTrigger class="w-full h-14">
+                <SelectValue placeholder="Selecciona..." />
+              </SelectTrigger>
+              <SelectContent>
+                {
+                  GENDER_OPTIONS.map(gender =>  
+                  <SelectItem value={gender.value}>{gender.label}</SelectItem>
+                  )
+                }
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <Label for="phone">Teléfono <RequiredField /></Label>
+          <Input id="phone" name="phone" type="tel" placeholder="+52 555 123 4567" />
+        </div>
+
+        <div class="space-y-2">
+          <Label for="email">Correo Electrónico <RequiredField /></Label>
+          <Input id="email" name="email" type="email" placeholder="juan@example.com" />
+        </div>
+
+        <div class="space-y-2">
+          <Label for="confirm_email">Confirmar Correo Electrónico <RequiredField /></Label>
+          <Input id="confirm_email" name="confirm_email" type="email" placeholder="juan@example.com" />
+        </div>
+
+        <div class="space-y-2">
+          <Label for="password">Contraseña <RequiredField /></Label>
+          <Input id="password" name="password" type="password" placeholder="Mínimo 8 caracteres" />
+          <p class="text-xs text-muted-foreground">Mínimo 8 caracteres, mayúsculas, minúsculas y números</p>
+        </div>
+
+        <div class="pt-4">
+          <Button type="submit" class="w-full py-6 text-base font-semibold shadow-lg shadow-blue-500/20">
+            Crear Cuenta
+          </Button>
+        </div>
+
+        <p class="text-center text-sm text-muted-foreground pt-2">
+          ¿Ya tienes una cuenta? 
+          <a href={`/auth/login${redirectFromUrl ? `?redirect=${redirectFromUrl}` : ''}`} class="text-blue-600 font-medium hover:underline">Iniciar Sesión</a>
+        </p>
+      </Form>
+    </div>
+  </main>
+</MainLayout>
+
+<script>
+  import { actions } from 'astro:actions';
+  import { navigate } from 'astro:transitions/client';
+  import { showFieldError, clearAllFieldErrors, setupFieldErrorListeners } from '@/lib/form-utils';
+  import { registerSchema, validatePassword } from '@/lib/validation';
+
+  // Usar astro:page-load para ViewTransitions
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('register-form') as HTMLFormElement;
+    if (!form) return;
+
+    // Setup listeners to clear errors on input
+    setupFieldErrorListeners('#register-form');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAllFieldErrors();
+      
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      const result = registerSchema.safeParse(data);
+
+      if (!result.success) {
+        result.error.issues.forEach((issue: any) => {
+          showFieldError(issue.path[0] as string, issue.message);
+        });
+        return;
+      }
+
+      const passwordError = validatePassword(data.password as string);
+      if (passwordError) {
+        showFieldError('password', passwordError);
+        return;
+      }
+
+      try {
+        const res = await actions.register.create(result.data);
+        
+        if (res.error) {
+          alert(res.error || 'Error al registrar');
+          return;
+        }
+
+        const redirect = data.redirect as string;
+        
+        if (redirect) {
+          navigate(`/events/${redirect}/registration`);
+        } else {
+          navigate('/participant/dashboard');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error al procesar el registro');
+      }
+    });
+  });
+</script>

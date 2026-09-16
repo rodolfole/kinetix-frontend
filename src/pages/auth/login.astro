@@ -1,0 +1,155 @@
+---
+import { Button } from '@/components/starwind/button';
+import { Checkbox } from '@/components/starwind/checkbox';
+import { Input } from '@/components/starwind/input';
+import { Label } from '@/components/starwind/label';
+import MainLayout from '@layouts/MainLayout.astro';
+import { Form } from '@shared/components/forms';
+import RequiredField from '@shared/components/forms/RequiredField.astro';
+
+// Obtener redirect desde la URL (query param) - es más confiable
+const redirectFromUrl = Astro.url.searchParams.get('redirect');
+
+// Si ya está autenticado, redirigir según role
+const accessToken = Astro.cookies.get('access_token');
+const userCookie = Astro.cookies.get('user');
+
+if (accessToken?.value && userCookie?.value) {
+  try {
+    const user = JSON.parse(userCookie.value);
+    //优先使用 redirect de la URL
+    if (redirectFromUrl) {
+      // Если es un event, agregar la ruta de registration
+      if (!redirectFromUrl.startsWith('/')) {
+        return Astro.redirect(`/events/${redirectFromUrl}/registration`);
+      }
+      return Astro.redirect(redirectFromUrl);
+    }
+    if (user?.role === 'participant') {
+      return Astro.redirect('/participant/dashboard');
+    }
+    return Astro.redirect('/dashboard');
+  } catch {
+    // Si falla el parse, permitir login
+  }
+}
+
+const pageTitle = 'Iniciar Sesión';
+const pageDescription = 'Ingresa a tu cuenta de Kinetix';
+---
+
+<MainLayout title={pageTitle} description={pageDescription}>
+  <main class="pt-24 pb-20 px-4 md:px-6 min-h-screen bg-zinc-50/50">
+    <div class="max-w-md mx-auto">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-3xl md:text-4xl font-black text-foreground tracking-tight">
+          Iniciar Sesión
+        </h1>
+        <p class="text-muted-foreground mt-2">
+          Ingresa a tu cuenta para continuar
+        </p>
+      </div>
+
+      <Form id="login-form" class="space-y-6 bg-white p-8 rounded-2xl shadow-sm border">
+    
+
+        <div class="space-y-2">
+          <Label for="email">Correo Electrónico <RequiredField /></Label>
+          <Input id="email" name="email" type="email" placeholder="tu@email.com" />
+        </div>
+
+        <div class="space-y-2">
+          <Label for="password">Contraseña <RequiredField /></Label>
+          <Input id="password" name="password" type="password" placeholder="Tu contraseña" />
+        </div>
+
+        <div class="flex items-center justify-between">
+          <Checkbox id="remember" name="remember" label="Recordarme" />
+          <a href="/auth/forgot-password" class="text-sm text-blue-600 hover:underline">
+            ¿Olvidaste tu contraseña?
+          </a>
+        </div>
+
+        <div class="pt-2">
+          <Button type="submit" class="w-full py-6 text-base font-semibold shadow-lg shadow-blue-500/20">
+            Iniciar Sesión
+          </Button>
+        </div>
+
+        <p class="text-center text-sm text-muted-foreground pt-2">
+          ¿No tienes cuenta? 
+          <a href={`/auth/register`} class="text-blue-600 font-medium hover:underline">
+            Regístrate
+          </a>
+        </p>
+      </Form>
+    </div>
+  </main>
+</MainLayout>
+
+<script>
+  import { actions } from 'astro:actions';
+  import { navigate } from 'astro:transitions/client';
+  import { showFieldError, clearAllFieldErrors, setupFieldErrorListeners } from '@/lib/form-utils';
+  import { loginSchema } from '@/lib/validation';
+
+  // Usar astro:page-load para ViewTransitions
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('login-form') as HTMLFormElement;
+    if (!form) return;
+
+    // Configurar field error listeners
+    setupFieldErrorListeners('#login-form');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAllFieldErrors();
+
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      const result = loginSchema.safeParse(data);
+
+      if (!result.success) {
+        result.error.issues.forEach((issue: any) => {
+          showFieldError(issue.path[0] as string, issue.message);
+        });
+        return;
+      }
+
+      try {
+        const res = await actions.auth.login(result.data);
+
+        if (res.error) {
+          alert(res.error || 'Credenciales incorrectas');
+          return;
+        }
+
+        // Priorizar redirect desde la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectParam = urlParams.get('redirect');
+        
+        const role = res.data.user?.role;
+        
+        // Determinar la URL target
+        let redirectUrl = '';
+        
+        if (redirectParam) {
+          if (!redirectParam.startsWith('/')) {
+            redirectUrl = `/events/${redirectParam}/registration`;
+          } else {
+            redirectUrl = redirectParam;
+          }
+        } else {
+          redirectUrl = role === 'participant' ? '/participant/dashboard' : '/dashboard';
+        }
+
+        // Full redirect para que el middleware vea las cookies
+        navigate(redirectUrl);
+      } catch (err) {
+        console.error('Login error:', err);
+      }
+    });
+  });
+</script>

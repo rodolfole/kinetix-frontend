@@ -1,0 +1,200 @@
+---
+import { Button } from '@/components/starwind/button';
+import { Input } from '@/components/starwind/input';
+import { Label } from '@/components/starwind/label';
+import MainLayout from '@layouts/MainLayout.astro';
+import { Form } from '@shared/components/forms';
+import { isAuthenticated } from '@/lib/auth';
+
+// Si ya está autenticado, redirigir según role
+const accessToken = Astro.cookies.get('access_token');
+const userCookie = Astro.cookies.get('user');
+
+if (accessToken?.value && userCookie?.value) {
+  try {
+    const user = JSON.parse(userCookie.value);
+    if (user?.role === 'organizer' || user?.role === 'admin') {
+      return Astro.redirect('/dashboard');
+    }
+    return Astro.redirect('/participant/dashboard');
+  } catch {
+    // Si falla el parse, permitir registro
+  }
+}
+
+if (isAuthenticated(Astro)) {
+  return Astro.redirect('/dashboard');
+}
+
+const pageTitle = 'Registro de Organizador';
+const pageDescription = 'Crea tu cuenta como organizador de eventos';
+---
+
+<MainLayout title={pageTitle} description={pageDescription}>
+  <main class="pt-24 pb-20 px-4 md:px-6 min-h-screen bg-zinc-50/50">
+    <div class="max-w-2xl mx-auto">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-3xl md:text-4xl font-black text-foreground tracking-tight">
+          Registro de Organizador
+        </h1>
+        <p class="text-muted-foreground mt-2">
+          Crea tu cuenta para empezar a publicar y gestionar eventos
+        </p>
+      </div>
+
+      <!-- Form -->
+      <Form id="register-organizer-form" class="space-y-8 bg-white p-8 rounded-2xl shadow-sm border">
+
+        <!-- Sección: Información de la cuenta -->
+        <fieldset>
+          <legend class="text-lg font-semibold text-foreground mb-4">Información de la cuenta</legend>
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <Label for="email">Correo Electrónico <span class="text-red-500">*</span></Label>
+              <Input id="email" name="email" type="email" placeholder="tus@eventos.com" />
+            </div>
+            <div class="space-y-2">
+              <Label for="password">Contraseña <span class="text-red-500">*</span></Label>
+              <Input id="password" name="password" type="password" placeholder="Mínimo 8 caracteres" />
+              <p class="text-xs text-muted-foreground">Mínimo 8 caracteres</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Sección: Información de la empresa -->
+        <fieldset>
+          <legend class="text-lg font-semibold text-foreground mb-4">Información de la empresa</legend>
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <Label for="business_name">Razón Social <span class="text-red-500">*</span></Label>
+              <Input id="business_name" name="business_name" placeholder="Corporativo Deportivo S.A. de C.V." />
+            </div>
+            <div class="space-y-2">
+              <Label for="brand_name">Nombre Comercial</Label>
+              <Input id="brand_name" name="brand_name" placeholder="Kinetix Events (opcional)" />
+            </div>
+            <div class="space-y-2">
+              <Label for="rfc">RFC <span class="text-red-500">*</span></Label>
+              <Input id="rfc" name="rfc" placeholder="ABCD123456XYZ" class="uppercase" />
+              <p class="text-xs text-muted-foreground">12 o 13 caracteres (persona moral o física)</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Sección: Información fiscal -->
+        <fieldset>
+          <legend class="text-lg font-semibold text-foreground mb-4">Dirección fiscal</legend>
+          <div class="space-y-4">
+            <div class="grid gap-4 md:grid-cols-3">
+              <div class="space-y-2">
+                <Label for="billing_zip_code">Código Postal <span class="text-red-500">*</span></Label>
+                <Input id="billing_zip_code" name="billing_zip_code" placeholder="12345" />
+              </div>
+              <div class="space-y-2">
+                <Label for="billing_state">Estado <span class="text-red-500">*</span></Label>
+                <Input id="billing_state" name="billing_state" placeholder="CDMX" />
+              </div>
+              <div class="space-y-2">
+                <Label for="billing_city">Ciudad <span class="text-red-500">*</span></Label>
+                <Input id="billing_city" name="billing_city" placeholder="Ciudad de México" />
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Sección: Información de contacto -->
+        <fieldset>
+          <legend class="text-lg font-semibold text-foreground mb-4">Contacto</legend>
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <Label for="contact_name">Nombre del contacto <span class="text-red-500">*</span></Label>
+              <Input id="contact_name" name="contact_name" placeholder="Juan Pérez" />
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              <div class="space-y-2">
+                <Label for="contact_email">Correo de contacto <span class="text-red-500">*</span></Label>
+                <Input id="contact_email" name="contact_email" type="email" placeholder="contacto@eventos.com" />
+              </div>
+              <div class="space-y-2">
+                <Label for="contact_phone">Teléfono de contacto <span class="text-red-500">*</span></Label>
+                <Input id="contact_phone" name="contact_phone" type="tel" placeholder="+52 555 123 4567" />
+              </div>
+            </div>
+            <div class="space-y-2">
+              <Label for="logo_url">URL del Logo</Label>
+              <Input id="logo_url" name="logo_url" type="url" placeholder="https://tusitio.com/logo.png (opcional)" />
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="pt-4">
+          <Button type="submit" class="w-full py-6 text-base font-semibold shadow-lg shadow-blue-500/20">
+            Crear cuenta de organizador
+          </Button>
+        </div>
+
+        <p class="text-center text-sm text-muted-foreground pt-2">
+          ¿Ya tienes una cuenta?
+          <a href="/auth/login" class="text-blue-600 font-medium hover:underline">Iniciar Sesión</a>
+        </p>
+
+        <p class="text-center text-sm text-muted-foreground">
+          ¿Quieres inscribirte a eventos?
+          <a href="/auth/register" class="text-blue-600 font-medium hover:underline">Regístrate como participante</a>
+        </p>
+      </Form>
+    </div>
+  </main>
+</MainLayout>
+
+<script>
+  import { actions } from 'astro:actions';
+  import { navigate } from 'astro:transitions/client';
+  import { showFieldError, clearAllFieldErrors, setupFieldErrorListeners } from '@/lib/form-utils';
+  import { organizerRegisterSchema } from '@/lib/validation';
+
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('register-organizer-form') as HTMLFormElement;
+    if (!form) return;
+
+    setupFieldErrorListeners('#register-organizer-form');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAllFieldErrors();
+
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      // Limpiar valores vacíos de campos opcionales
+      const cleaned = Object.fromEntries(
+        Object.entries(data).filter(([_, v]) => v !== '')
+      );
+
+      const result = organizerRegisterSchema.safeParse(cleaned);
+
+      if (!result.success) {
+        result.error.issues.forEach((issue: any) => {
+          showFieldError(issue.path[0] as string, issue.message);
+        });
+        return;
+      }
+
+      try {
+        const res = await actions.register.registerOrganizer(result.data);
+
+        if (res.error) {
+          alert(res.error || 'Error al registrar organizador');
+          return;
+        }
+
+        // Redirigir al dashboard de organizador
+        navigate('/dashboard');
+      } catch (err) {
+        console.error(err);
+        alert('Error al procesar el registro');
+      }
+    });
+  });
+</script>
