@@ -1,0 +1,211 @@
+---
+import MainLayout from '@layouts/MainLayout.astro';
+import { Button, Heading } from '@shared/components';
+import { generateQR } from '@lib/qr';
+import { api } from '@lib/api';
+
+const { slug } = Astro.params;
+const url = new URL(Astro.request.url);
+const registrationId = url.searchParams.get('id') || 'REG-000000';
+
+// Get registration data from session (in production, fetch from DB)
+const registrationData = JSON.parse(Astro.cookies.get('registration-data')?.value || '{}');
+
+// Load real event data from the API using the slug
+let eventInfo = {
+  name: '10K Valencia Marathon',
+  date: '15 de Octubre, 2024',
+  time: '08:00 AM',
+  location: 'Circuito Reforma, CDMX',
+};
+
+if (slug) {
+  try {
+    const response = await api.get(`/events/slug/${slug}`);
+    const evt = response.data?.data;
+    if (evt) {
+      // Formatear la fecha en español legible
+      const eventDate = new Date(evt.event_date);
+      const formattedDate = eventDate.toLocaleDateString('es-MX', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+      const formattedTime = eventDate.toLocaleTimeString('es-MX', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+      eventInfo = {
+        name: evt.name,
+        date: formattedDate,
+        time: formattedTime,
+        location: [evt.address, evt.municipality, evt.state].filter(Boolean).join(', '),
+      };
+    }
+  } catch {
+    // Mantener datos placeholder si falla el fetch
+  }
+}
+
+// Generate QR code with registration ID
+const qrDataUrl = await generateQR(registrationId, {
+  size: 280,
+  margin: 2,
+  color: { dark: '#1e3a8a', light: '#ffffff' }
+});
+---
+
+<MainLayout title="¡Inscripción Exitosa!" description="Tu registro ha sido completado">
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-4">
+    <div class="max-w-2xl mx-auto">
+      
+      <!-- Success Header -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-green-500 rounded-full mb-6 shadow-lg shadow-green-500/30">
+          <svg class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <Heading as="h1" class="!text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-green-600 mb-3">
+          ¡Inscripción Exitosa!
+        </Heading>
+        <p class="text-zinc-500 text-lg">Tu registro ha sido completado correctamente</p>
+      </div>
+
+      <!-- Registration Card -->
+      <div class="bg-white rounded-3xl shadow-xl border border-zinc-100 overflow-hidden mb-8">
+        
+        <!-- Registration ID Banner -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 text-center">
+          <p class="text-blue-100 text-xs font-black uppercase tracking-widest mb-2">Tu Folio de Registro</p>
+          <p class="text-white text-3xl font-black font-mono tracking-wider">{registrationId}</p>
+        </div>
+
+        <div class="p-8 md:p-10">
+          
+          <!-- Event Info -->
+          <div class="mb-8">
+            <Heading as="h2" class="!text-2xl font-black mb-6 text-blue-800">Detalles del Evento</Heading>
+            
+            <div class="space-y-4">
+              <div class="flex items-start gap-4 p-4 bg-zinc-50 rounded-xl">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-700 flex-shrink-0">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Evento</p>
+                  <p class="text-sm font-bold text-zinc-800">{eventInfo.name}</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4 p-4 bg-zinc-50 rounded-xl">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-700 flex-shrink-0">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Fecha y Hora</p>
+                  <p class="text-sm font-bold text-zinc-800">{eventInfo.date} - {eventInfo.time}</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4 p-4 bg-zinc-50 rounded-xl">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-700 flex-shrink-0">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Ubicación</p>
+                  <p class="text-sm font-bold text-zinc-800">{eventInfo.location}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- QR Code Section -->
+          <div class="border-t border-zinc-200 pt-8 mb-8">
+            <Heading as="h3" class="!text-xl font-black mb-4 text-center text-blue-800">Tu Código QR</Heading>
+            <p class="text-zinc-500 text-sm text-center mb-6">Presenta este código QR el día del evento para recoger tu kit de participante</p>
+            
+            <div class="bg-zinc-50 rounded-2xl p-8 flex flex-col items-center">
+              <div class="bg-white p-4 rounded-xl shadow-md">
+                <img src={qrDataUrl} alt="QR Code" class="w-64 h-64" />
+              </div>
+              <p class="text-xs text-zinc-400 mt-4 font-mono">{registrationId}</p>
+            </div>
+          </div>
+
+          <!-- Important Info -->
+          <div class="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8">
+            <div class="flex items-start gap-3">
+              <div class="bg-blue-600 rounded-full p-2 flex-shrink-0">
+                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <Heading as="h4" class="!text-sm font-black text-blue-800 mb-2">Información Importante</Heading>
+                <ul class="text-sm text-blue-700 space-y-1">
+                  <li>• Guarda este comprobante para el día del evento</li>
+                  <li>• Presenta tu QR en el módulo de registro para recoger tu kit</li>
+                  <li>• El kit incluye: playera, número de participante y chip de cronometraje</li>
+                  <li>• Revisa tu email para más detalles sobre el evento</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4">
+            <Button
+              type="button"
+              variant="tertiary"
+              size="lg"
+              class="flex-1 font-black italic shadow-blue-500/40"
+              onclick="window.print()"
+            >
+              <svg slot="before" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              IMPRIMIR COMPROBANTE
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              class="flex-1 font-black italic border-blue-700 text-blue-700"
+              onclick="window.location.href='/eventos'"
+            >
+              <svg slot="before" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+              VOLVER A EVENTOS
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Note -->
+      <p class="text-center text-zinc-400 text-xs">
+        ¿Tienes dudas? Contáctanos en <a href="mailto:soporte@kinetix.run" class="text-blue-600 underline">soporte@kinetix.run</a>
+      </p>
+    </div>
+  </main>
+</MainLayout>
+
+<script is:inline>
+  // Print functionality
+  window.addEventListener('DOMContentLoaded', () => {
+    // Check if we came from registration flow
+    const hasRegistrationData = sessionStorage.getItem('registration-data');
+    if (!hasRegistrationData) {
+      console.warn('No registration data found');
+    }
+  });
+</script>

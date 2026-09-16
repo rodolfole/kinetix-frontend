@@ -1,0 +1,118 @@
+---
+import { RegisterForm } from '@features/registration/components';
+import MainLayout from '@layouts/MainLayout.astro';
+import { api } from '@lib/api';
+
+// Get event slug from URL
+const { slug } = Astro.params;
+
+// Fetch event details from API
+let event = null;
+let participantFieldsConfig: ParticipantFieldConfig[] = [];
+let profile = null;
+let error = null;
+
+try {
+  const response = await api.get(`/events/slug/${slug}`);
+  if (response.data) {
+    event = response.data.data;
+  }
+} catch (e) {
+  error = 'No se pudo cargar la información del evento';
+}
+
+// Fetch full event detail to get participant fields config
+if (event?.id) {
+  try {
+    const detailResponse = await api.get(`/events/${event.id}/detail`);
+    if (detailResponse.data?.data?.participant_fields_config) {
+      participantFieldsConfig = detailResponse.data.data.participant_fields_config;
+    }
+  } catch (e) {
+    // Config not available, use defaults
+    participantFieldsConfig = [];
+  }
+}
+
+// Fetch participant profile if user is logged in
+const accessToken = Astro.cookies.get('access_token')?.value;
+if (accessToken) {
+  try {
+    // Decode JWT to get participant_id (payload is base64 url encoded)
+    const payload = accessToken.split('.')[1];
+    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    const participantId = decoded.participant_id || decoded.sub;
+
+    if (participantId) {
+      const profileResponse = await api.get(`/participants/${participantId}`);
+      if (profileResponse.data?.data) {
+        profile = profileResponse.data.data;
+      }
+    }
+  } catch (e) {
+    // User might not be logged in or token invalid - that's ok
+    profile = null;
+  }
+}
+
+// Default event data if API fails
+if (!event) {
+  event = {
+    id: 'event-001',
+    slug: slug || '10k-valencia-marathon',
+    name: '10K Valencia Marathon',
+    date: '2024-12-01T08:00:00Z',
+    location: {
+      city: 'Valencia',
+      venue: 'City of Arts and Sciences',
+      address: 'Ciudad de las Artes y las Ciencias, Valencia, Spain',
+    },
+    pricing: {
+      basePrice: 4500,
+      currency: 'MXN',
+    },
+    distances: [],
+  };
+}
+
+const eventId = event?.id || '';
+
+// Helper to check if a field is enabled and required
+function isFieldEnabled(fieldName: string): boolean {
+  const field = participantFieldsConfig.find(f => f.field_name === fieldName);
+  return field ? field.is_enabled : false;
+}
+
+function isFieldRequired(fieldName: string): boolean {
+  // address is always required
+  if (fieldName === 'address') return true;
+  const field = participantFieldsConfig.find(f => f.field_name === fieldName);
+  return field ? field.is_required : false;
+}
+
+// Serializar la config y profile para pasarlos al cliente
+const participantFieldsConfigJson = JSON.stringify(participantFieldsConfig);
+const profileJson = JSON.stringify(profile);
+---
+
+<MainLayout title="Inscripción al Evento" description="Completa tu registro para participar">
+  <main class="pt-24 pb-20 px-4 md:px-6 min-h-screen">
+    {error && (
+      <div class="max-w-2xl mx-auto bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
+        <p class="text-red-700">{error}</p>
+      </div>
+    )}
+    <RegisterForm
+      event={event}
+      profile={profile}
+      participantFieldsConfig={participantFieldsConfigJson}
+    />
+  </main>
+</MainLayout>
+
+<script define:vars={{ participantFieldsConfigJson, profileJson, eventId }}>
+  // Expose config, profile, and event id to window for client-side access
+  window.__PARTICIPANT_FIELDS_CONFIG__ = JSON.parse(participantFieldsConfigJson);
+  window.__PROFILE__ = JSON.parse(profileJson);
+  window.__EVENT_ID__ = eventId || '';
+</script>

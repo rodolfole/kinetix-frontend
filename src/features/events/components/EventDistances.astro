@@ -1,0 +1,103 @@
+---
+import { formatPrice } from '@lib/mock-data';
+import type { BaseEvent, EventDistance } from '@features/events/types/event.type';
+import { Heading } from '@shared/components';
+import { isAuthenticated } from '@/lib/auth';
+
+export interface Props {
+  event: BaseEvent;
+}
+
+const { event } = Astro.props;
+
+// Verificar autenticación
+const authenticated = isAuthenticated(Astro);
+
+const registerUrl = (distanceId: string) => authenticated 
+  ? `/events/${event.slug}/registration?distance=${distanceId}`
+  : `/auth/register?redirect=${event.slug}`;
+---
+
+<section class="py-24 bg-surface">
+  <div class="container mx-auto px-6">
+    <div class="text-center mb-16">
+      <Heading 
+        as="h2" 
+        size="xl"
+        class="tracking-tight mb-4 !text-5xl"
+      >
+        Choose Your Distance
+      </Heading>
+      <p class="font-body text-on-surface-variant max-w-2xl mx-auto text-lg">
+        Multiple distances available. Whether you're chasing a record or your first finish line.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-{event.distances.length <= 3 ? event.distances.length : 3} gap-8">
+      {event.distances.map((distance, index) => {
+        const price = Math.max(0, event.pricing.basePrice + distance.priceModifier);
+        const isFeatured = index === 1;
+        
+        return (
+          <div class:list={[
+            'p-8 rounded-2xl border transition-all flex flex-col',
+            isFeatured 
+              ? 'bg-primary/5 border-primary shadow-lg shadow-primary/10' 
+              : 'bg-white border-surface-variant hover:border-primary/50'
+          ]}>
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-4xl font-headline font-black">{distance.km}K</span>
+              {isFeatured && (
+                <span class="text-xs font-bold bg-primary text-on-primary px-2 py-1 rounded">POPULAR</span>
+              )}
+            </div>
+            
+            <h3 class="text-xl font-bold mb-2">{distance.name}</h3>
+            <p class="text-on-surface-variant text-sm mb-6">{distance.description}</p>
+            
+            <div class="space-y-3 flex-1">
+              <div class="flex items-center gap-2 text-sm">
+                <svg class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>{distance.elevation ? `${distance.elevation}m elevation` : 'Flat course'}</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm">
+                <svg class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Cutoff: {distance.timeLimit || '6 hours'}</span>
+              </div>
+              
+              {distance.availableSlots && (
+                <div class="flex items-center gap-2 text-sm text-green-600 font-medium">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span class="text-sm">{distance.availableSlots - (distance.registered || 0)} spots available</span>
+                </div>
+              )}
+            </div>
+
+            <div class="mt-auto pt-8 border-t border-surface-variant">
+              <p class="text-3xl font-headline font-bold text-primary">
+                {formatPrice(price, event.pricing.currency)}
+              </p>
+              <a
+                href={registerUrl(distance.id)}
+                class:list={[
+                  'w-full mt-6 py-3 font-bold rounded-md text-center block transition-all',
+                  isFeatured
+                    ? 'bg-primary text-on-primary shadow-lg shadow-primary/30 hover:opacity-90'
+                    : 'border-2 border-primary text-primary hover:bg-primary hover:text-on-primary'
+                ]}
+              >
+                Select Distance
+              </a>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,90 @@
+---
+import type { BaseEvent } from '@features/events/types/event.type';
+import { Button, Heading } from '@shared/components';
+import { isAuthenticated } from '@/lib/auth';
+
+export interface Props {
+  event: BaseEvent;
+}
+
+const { event } = Astro.props;
+
+const eventDate = new Date(event.date);
+const formattedDate = eventDate.toLocaleDateString('en-US', {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+}).toUpperCase();
+
+const capacityPercent = event.capacity && event.registered
+  ? Math.round((event.registered / event.capacity) * 100)
+  : 85;
+
+// Verificar autenticación
+const authenticated = isAuthenticated(Astro);
+
+// URL según estado de auth
+const registerUrl = authenticated 
+  ? `/events/${event.slug}/registration`
+  : `/auth/register?redirect=${event.slug}`;
+---
+
+<section class="relative min-h-[870px] flex items-center justify-center overflow-hidden">
+  <div class="absolute inset-0 z-0">
+    <img
+      src={event.images.hero}
+      alt={event.name}
+      class="w-full h-full object-cover brightness-[0.4]"
+    />
+  </div>
+
+  <div class="relative z-10 container mx-auto px-6 text-center text-on-primary">
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 backdrop-blur-md border border-primary/30 mb-8">
+      <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+      <span class="font-label text-xs tracking-widest uppercase font-bold">Inscripciones abiertas</span>
+    </div>
+
+    <Heading 
+      as="h1" 
+      size="xl"
+      class="italic tracking-tighter !text-6xl md:!text-9xl text-white"
+    >
+      {event.name}
+    </Heading>
+
+    <div class="flex flex-wrap justify-center gap-6 md:gap-12 mt-12 font-body">
+      <div class="flex flex-col items-center">
+        <span class="text-primary-fixed text-xs font-bold tracking-widest uppercase mb-1">Fecha</span>
+        <span class="text-2xl font-bold">{formattedDate}</span>
+      </div>
+      <div class="w-px h-12 bg-surface-variant/30 hidden md:block"></div>
+      <div class="flex flex-col items-center">
+        <span class="text-primary-fixed text-xs font-bold tracking-widest uppercase mb-1">Ubicación</span>
+        <span class="text-2xl font-bold uppercase">{event.location.municipality}, {event.location.state}</span>
+      </div>
+      <div class="w-px h-12 bg-surface-variant/30 hidden md:block"></div>
+      <div class="flex flex-col items-center">
+        <span class="text-primary-fixed text-xs font-bold tracking-widest uppercase mb-1">Ocupación</span>
+        <span class="text-2xl font-bold">{capacityPercent}% Capacidad</span>
+      </div>
+    </div>
+
+    <div class="mt-16">
+      <a href={registerUrl} class="block w-full">
+        <Button variant="tertiary" size="lg" class="px-12 py-5 hover:scale-105 transition-transform">
+          REGÍSTRATE AHORA
+        </Button>
+      </a>
+    </div>
+  </div>
+
+  <!-- Asymmetric Decorative Element -->
+  <div class="absolute -bottom-10 right-0 w-1/3 h-64 bg-surface-container-low -skew-y-6 translate-y-12 z-0 hidden lg:block"></div>
+</section>
+
+<style>
+  .text-shadow-editorial {
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+</style>

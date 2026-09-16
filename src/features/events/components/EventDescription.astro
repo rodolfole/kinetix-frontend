@@ -1,0 +1,149 @@
+---
+import type { BaseEvent } from '@features/events/types/event.type';
+import type { RouteData } from '@features/events/types/route.type';
+import RouteViewer from '@features/events/components/routes/RouteViewer';
+import { Heading } from '@shared/components';
+
+export interface Props {
+  event: BaseEvent;
+  routes?: RouteData[];
+}
+
+const { event, routes = [] } = Astro.props;
+const hasRoutes = routes.length > 0;
+
+// Serialize routes for the React island (Astro handles JSON passthrough)
+const routesJson = JSON.stringify(routes);
+const defaultDistanceId = routes[0]?.distance_id || '';
+---
+
+<section class="py-24 bg-surface relative z-10">
+  <div class="container mx-auto px-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
+      <!-- Left Column: Description + Map -->
+      <div class="lg:col-span-7">
+        <Heading 
+          as="h2" 
+          size="lg" 
+          class="tracking-tight mb-8 !text-4xl font-extrabold"
+        >
+          {event.shortDescription}
+        </Heading>
+
+        <div class="space-y-6 font-body text-lg leading-relaxed text-on-surface-variant">
+          {event.description.split('\n').map((paragraph) => (
+            <p set:html={paragraph.trim()} />
+          ))}
+        </div>
+
+        <!-- Route Map: interactive or placeholder -->
+        {
+          hasRoutes ? (
+            <div class="mt-16">
+              <RouteViewer
+                routes={routesJson}
+                defaultDistanceId={defaultDistanceId}
+                client:load
+              />
+            </div>
+          ) : (
+            <div class="mt-16 rounded-xl overflow-hidden shadow-xl bg-surface-container-high aspect-video relative group">
+              <img
+                src={event.images.gallery?.[0] || event.images.hero}
+                alt={`${event.name} route map`}
+                class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 transition-all duration-700"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
+                <div class="flex items-center gap-4 text-white">
+                  <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3l-6-3m6 3l6 3m6-3l-5.447-2.724A1 1 0 0121 16.382V5.618a1 1 0 00-1.447-.894L15 7m6 13l-3-1.5m0-9l-3-1.5m0 0L9 7m6 0l-6 3m6 0l3 1.5M9 7l6 3m0 0l3-1.5" />
+                  </svg>
+                  <div>
+                    <Heading 
+                      as="h4" 
+                      size="sm" 
+                      class="font-headline"
+                    >
+                      Ruta de carrera
+                    </Heading>
+                    <p class="text-sm opacity-80">Próximamente mapa interactivo</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        }
+      </div>
+
+      <!-- Right Column: Quick Info -->
+      <div class="lg:col-span-5 space-y-8">
+        <div class="p-8 bg-surface-container-low rounded-xl">
+          <Heading 
+            as="h3" 
+            size="md" 
+            class="flex items-center gap-2 mb-6 !text-2xl"
+          >
+            <svg class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Detalles del evento
+          </Heading>
+
+          <div class="space-y-4">
+            <div class="flex items-start gap-4">
+              <span class="font-headline font-black text-primary min-w-[80px]">FECHA</span>
+              <div>
+                <p class="font-bold text-on-surface">{new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4">
+              <span class="font-headline font-black text-primary min-w-[80px]">DIRECCIÓN</span>
+              <div>
+                <p class="text-sm text-on-surface-variant">{event.location.address}</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4">
+              <span class="font-headline font-black text-primary min-w-[80px]">ORGANIZADOR</span>
+              <div>
+                <p class="font-bold text-on-surface">{event.organizer.name}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {event.capacity && event.registered && (
+          <div class="p-8 bg-surface-container-highest rounded-xl">
+            <Heading 
+              as="h3" 
+              size="md"
+              class="mb-4 !text-xl"
+            >
+              Capacity Status
+            </Heading>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <span class="text-on-surface-variant">Available Spots</span>
+                <span class="font-bold text-on-surface">{event.capacity - event.registered} / {event.capacity}</span>
+              </div>
+              <div class="h-2 bg-surface-variant rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-primary rounded-full transition-all"
+                  style={`width: ${event.capacity}%`}
+                  set:html={null}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div class="flex flex-wrap gap-2">
+          {event.tags.map((tag) => (
+            <span class="px-3 py-1 bg-surface-container text-on-surface-variant text-xs font-bold uppercase tracking-wider rounded-full">
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

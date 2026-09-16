@@ -1,0 +1,174 @@
+---
+import { ITINERARY_ICON_LABELS } from '@features/events/consts';
+import type { BaseEvent } from '@features/events/types/event.type';
+import { Heading } from '@shared/components';
+import {
+  Flag, FlagTriangleRight, MapPin, Droplet, Apple,
+  HeartPulse, BriefcaseMedical, Bath, CircleParking,
+  Tent, Backpack, Music, Camera, Timer, Info,
+  ArrowUpFromLine, ArrowDownToLine, Utensils, Shirt, Trophy,
+} from '@lucide/astro';
+
+export interface Props {
+  event: BaseEvent;
+}
+
+const { event } = Astro.props;
+const items = event.itinerary;
+if (!items || items.length === 0) return;
+
+type IconComponent = typeof Flag;
+
+const ICON_MAP: Record<string, IconComponent> = {
+  flag: Flag,
+  finish: FlagTriangleRight,
+  'map-pin': MapPin,
+  droplet: Droplet,
+  apple: Apple,
+  'heart-pulse': HeartPulse,
+  'first-aid': BriefcaseMedical,
+  bath: Bath,
+  parking: CircleParking,
+  tent: Tent,
+  backpack: Backpack,
+  music: Music,
+  camera: Camera,
+  timer: Timer,
+  info: Info,
+  'arrow-up-from-line': ArrowUpFromLine,
+  'arrow-down-to-line': ArrowDownToLine,
+  utensils: Utensils,
+  shirt: Shirt,
+  trophy: Trophy,
+};
+
+function getIconLabel(iconName: string): string {
+  return ITINERARY_ICON_LABELS[iconName] || iconName;
+}
+
+const isFirst = (i: number) => i === 0;
+const isLast  = (i: number) => i === items.length - 1;
+---
+
+<section class="py-28 bg-surface-container-low border-y border-surface-variant/20">
+  <div class="container mx-auto px-6">
+
+    <!-- Header -->
+    <div class="max-w-2xl mb-20">
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-primary mb-3">
+        Descripción general de la ruta
+      </p>
+      <Heading as="h2" size="lg" class="!text-4xl md:!text-5xl tracking-tight mb-4">
+        Itinerario de la carrera
+      </Heading>
+      <p class="text-on-surface-variant text-lg leading-relaxed">
+        Recorre el trayecto: cada punto de control, cada momento a lo largo de la ruta.
+      </p>
+    </div>
+
+    <!-- Timeline grid -->
+    <div class="max-w-4xl mx-auto">
+      <div class="relative">
+
+        <!-- Spine (desktop only) -->
+        <div
+          aria-hidden="true"
+          class="hidden md:block absolute left-1/2 -translate-x-px
+                 top-10 bottom-10 w-px
+                 bg-gradient-to-b from-transparent via-primary/20 to-transparent"
+        ></div>
+
+        <ol class="flex flex-col gap-10 md:gap-14">
+          {items.map((item, index) => {
+            const isEven  = index % 2 === 0;
+            const Icon    = ICON_MAP[item.icon] ?? Info;
+            const label   = getIconLabel(item.icon);
+            const stepNum = String(index + 1).padStart(2, '0');
+
+            return (
+              <li class="relative grid grid-cols-[3rem_1fr] md:grid-cols-2 gap-x-6 md:gap-x-0 items-start">
+
+                <!-- ════ CENTRE NODE ════ -->
+                <!--
+                  Mobile : sits in col 1, row 1
+                  Desktop: absolutely centred on the spine
+                -->
+                <div class="
+                  relative z-10 flex flex-col items-center gap-1
+                  md:absolute md:left-1/2 md:-translate-x-1/2 md:top-0
+                ">
+                  <span class="text-[10px] font-extrabold tabular-nums tracking-widest text-primary/60">
+                    {stepNum}
+                  </span>
+
+                  <div class="
+                    group w-11 h-11 rounded-full
+                    bg-surface-container-highest
+                    border-2 border-primary/20
+                    shadow-sm ring-[3px] ring-surface-container-low
+                    flex items-center justify-center
+                    transition duration-300
+                    hover:border-primary/60 hover:shadow-md hover:scale-110
+                  ">
+                    <Icon class="w-[18px] h-[18px] text-primary transition duration-300 group-hover:scale-110" />
+                  </div>
+                </div>
+
+                <!-- ════ CONTENT CARD ════ -->
+                <!--
+                  Mobile : always in col 2
+                  Desktop: left side if even, right side if odd
+                -->
+                <div class={`
+                  col-start-2 md:col-span-1
+                  ${isEven
+                    ? 'md:col-start-1 md:pr-14 md:text-right md:flex md:justify-end'
+                    : 'md:col-start-2 md:pl-14'}
+                `}>
+                  <article class="
+                    w-full md:max-w-sm
+                    bg-surface-container-lowest
+                    rounded-2xl p-5
+                    border border-surface-variant/20
+                    shadow-xs
+                    transition duration-300
+                    hover:shadow-md hover:-translate-y-0.5
+                  ">
+                    <!-- Tag row -->
+                    <div class={`flex items-center gap-2 mb-3 ${isEven ? 'md:flex-row-reverse' : ''}`}>
+                      <span class="
+                        inline-flex items-center gap-1 px-2 py-0.5
+                        rounded-full text-[10px] font-bold uppercase tracking-wider
+                        bg-primary/10 text-primary
+                      ">
+                        {label}
+                      </span>
+                      <span class="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest">
+                        Stop {stepNum}
+                      </span>
+                    </div>
+
+                    <!-- Title -->
+                    <h3 class="
+                      text-base font-headline font-bold
+                      text-on-surface leading-snug mb-2
+                    ">
+                      {item.key}
+                    </h3>
+
+                    <!-- Time -->
+                    <p class="text-sm font-bold text-primary font-body leading-relaxed">
+                      {item.time}
+                    </p>
+                  </article>
+                </div>
+
+              </li>
+            );
+          })}
+        </ol>
+
+      </div>
+    </div>
+  </div>
+</section>

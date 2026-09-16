@@ -1,0 +1,143 @@
+---
+import { Button, Heading } from '@shared/components';
+import type { BaseEvent } from '../types/event.type';
+import { formatDate, formatPrice, getAvailableSlots } from '@lib/mock-data';
+
+export interface Props {
+  event: BaseEvent;
+  featured?: boolean;
+}
+
+const { event, featured = false } = Astro.props;
+
+const mainDistance = event.distances[0];
+const spotsLeft = mainDistance ? getAvailableSlots(event, mainDistance.id) : undefined;
+const price = mainDistance
+  ? event.pricing.basePrice + mainDistance.priceModifier
+  : event.pricing.basePrice;
+---
+
+{featured ? (
+  <div class="lg:col-span-2 group relative bg-surface-container-low rounded-xl overflow-hidden flex flex-col md:flex-row transition-all duration-300">
+    <div class="absolute top-0 left-0 w-1 h-full bg-secondary z-10"></div>
+    <div class="relative md:w-1/2 h-80 md:h-auto overflow-hidden">
+      <img
+        src={event.images.hero}
+        alt={event.name}
+        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+      />
+      <div class="absolute inset-0 bg-secondary/10 group-hover:bg-secondary/0 transition-all"></div>
+    </div>
+    <div class="p-10 flex flex-col justify-center md:w-1/2">
+      <span class="text-secondary font-headline font-bold tracking-widest uppercase text-xs mb-2">
+        Majors Series
+      </span>
+      <Heading 
+        as="h3" 
+        size="lg"
+      >
+        {event.name}
+      </Heading>
+      <p class="text-zinc-600 mb-6 font-medium font-body">
+        {event.shortDescription}
+      </p>
+      <div class="flex gap-4 mb-8">
+        <div class="flex flex-col">
+          <span class="text-zinc-400 text-xs font-bold uppercase tracking-widest">Entry</span>
+          <span class="text-blue-700 font-black text-2xl tracking-tighter">
+            {formatPrice(Math.max(0, price), event.pricing.currency)}
+          </span>
+        </div>
+        <div class="h-10 w-[1px] bg-gray-200"></div>
+        <div class="flex flex-col">
+          <span class="text-zinc-400 text-xs font-bold uppercase tracking-widest">Date</span>
+          <span class="text-on-surface font-black text-2xl tracking-tighter">
+            {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}
+          </span>
+        </div>
+      </div>
+      <a href={`/events/${event.slug}`} class="block w-full">
+        <Button variant="tertiary" size="lg" class="w-full">
+          REGISTER FOR ELITE WAVE
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </Button>
+      </a>
+    </div>
+  </div>
+) : (
+  <a
+    href={`/events/${event.slug}`}
+    class="group relative bg-surface-container-lowest rounded-xl overflow-hidden transition-all duration-300"
+  >
+    <div class="absolute top-0 left-0 w-1 h-full bg-primary z-10 group-hover:w-2 transition-all"></div>
+    
+    <div class="relative h-64 overflow-hidden">
+      <img
+        src={event.images.hero}
+        alt={event.name}
+        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+      />
+      <div class="absolute top-4 right-4 bg-primary text-on-primary font-headline font-bold text-xs px-3 py-1 rounded-md">
+        {mainDistance?.name || 'Race'}
+      </div>
+      {event.featured && (
+        <div class="absolute top-4 left-4 bg-secondary text-on-secondary font-headline font-bold text-xs px-3 py-1 rounded-md">
+          Featured
+        </div>
+      )}
+    </div>
+
+    <div class="p-8">
+      <div class="flex justify-between items-start mb-4">
+        <Heading 
+          as="h3" 
+          size="md"
+          class="italic tracking-tight !text-2xl font-extrabold"
+        >
+          {event.name}
+        </Heading>
+        <span class="text-blue-700 font-black text-xl tracking-tighter">
+          {formatPrice(Math.max(0, price), event.pricing.currency)}
+        </span>
+      </div>
+
+      <div class="space-y-4">
+        <div class="flex items-center gap-3 text-zinc-500">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span class="text-sm font-bold uppercase tracking-wider">
+            {formatDate(event.date)}
+          </span>
+        </div>
+        <div class="flex items-center gap-3 text-zinc-500">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span class="text-sm font-bold uppercase tracking-wider truncate">
+            {event.location.state}, {event.location.municipality}
+          </span>
+        </div>
+      </div>
+
+      {spotsLeft !== undefined && spotsLeft < 100 && (
+        <div class="mt-4 pt-4 border-t border-gray-100">
+          <p class="text-xs text-orange-600 font-bold">
+            ¡Últimos lugares! ({spotsLeft} disponibles)
+          </p>
+        </div>
+      )}
+
+      <Button 
+        variant="outline" 
+        size="lg" 
+        class="mt-8 w-full uppercase tracking-widest text-xs"
+      >
+        Lugar seguro
+      </Button>
+    </div>
+  </a>
+)}

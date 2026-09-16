@@ -1,0 +1,23 @@
+---
+import { isAuthenticated } from '@/lib/auth';
+
+export interface Props {
+  eventSlug: string;
+  text?: string;
+  class?: string;
+}
+
+const { eventSlug, text = 'REGISTER NOW', class: className = '' } = Astro.props;
+
+// Verificar si está autenticado
+const authenticated = isAuthenticated(Astro);
+
+// Construir la URL según el estado de autenticación
+const href = authenticated 
+  ? `/events/${eventSlug}/registration`
+  : `/auth/register?redirect=${eventSlug}`;
+---
+
+<a href={href} class={className}>
+  {text}
+</a>
