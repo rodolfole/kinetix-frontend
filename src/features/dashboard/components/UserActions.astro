@@ -1,0 +1,120 @@
+---
+import {  CalendarCheck, LogOut, Settings, User } from '@lucide/astro';
+import {
+  Dropdown,
+  DropdownContent,
+  DropdownLabel,
+  DropdownSeparator,
+  DropdownTrigger,
+} from '@/components/starwind/dropdown';
+
+export interface UserMenuItem {
+  icon: any;
+  label: string;
+  href: string;
+}
+
+export interface Props {
+  user?: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    role?: string;
+  };
+  items?: UserMenuItem[];
+}
+
+const { user, items } = Astro.props;
+
+// Obtener iniciales para el avatar
+const initials = user?.first_name && user?.last_name
+  ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+  : user?.first_name
+    ? user.first_name[0].toUpperCase()
+    : '?';
+
+// Links base según role
+const role = user?.role || 'participant';
+
+const defaultItems: UserMenuItem[] = role === 'participant'
+  ? [
+      { icon: CalendarCheck, label: 'Mis Inscripciones', href: '/participant/dashboard/registrations' },
+      { icon: User, label: 'Mi Perfil', href: '/participant/dashboard/profile' },
+      { icon: Settings, label: 'Configuración', href: '/participant/dashboard/settings' },
+    ]
+  : [ // organizer
+      { icon: User, label: 'Mi Perfil', href: '/dashboard/profile' },
+      { icon: Settings, label: 'Configuración', href: '/dashboard/settings' },
+    ];
+
+const menuItems = items || defaultItems;
+---
+
+<div class="flex items-center gap-4">
+  <!-- Notifications -->
+  <button class="p-2 hover:bg-zinc-100 rounded-lg transition-colors relative">
+    <svg class="w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
+    </svg>
+    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+  </button>
+
+  <!-- User Menu Dropdown -->
+  <Dropdown>
+    <DropdownTrigger asChild>
+      <button class="flex items-center gap-2 p-0.5 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer">
+        <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+          {initials}
+        </div>
+      </button>
+    </DropdownTrigger>
+    <DropdownContent align="end">
+      <DropdownLabel>
+        {user?.first_name} {user?.last_name}
+      </DropdownLabel>
+      <p class="px-2 pb-2 text-xs text-muted-foreground">{user?.email}</p>
+      <p class="px-2 pb-2 text-xs text-blue-600 font-medium uppercase">{role}</p>
+      <DropdownSeparator />
+      
+      {menuItems.map((item) => (
+        <a href={item.href} class="flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent cursor-pointer">
+          <item.icon class="w-4 h-4" />
+          {item.label}
+        </a>
+      ))}
+      
+      <DropdownSeparator />
+      <button id="logout-btn" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm rounded-sm text-red-600 hover:bg-red-50 cursor-pointer">
+        <LogOut class="w-4 h-4" />
+        Cerrar Sesión
+      </button>
+    </DropdownContent>
+  </Dropdown>
+</div>
+
+<script>
+  import { actions } from 'astro:actions';
+    import { navigate } from 'astro:transitions/client';
+  
+  // Usar astro:page-load para ViewTransitions
+  document.addEventListener('astro:page-load', () => {
+    const logoutBtn = document.getElementById('logout-btn') as HTMLButtonElement;
+    if (!logoutBtn) return;
+
+    logoutBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      
+      // Disable botón para evitar doble click
+      logoutBtn.disabled = true;
+      
+      try {
+        await actions.auth.logout({});
+        
+        navigate('/auth/login');
+      } catch (err) {
+        console.error('Error al cerrar sesión:', err);
+        navigate('/auth/login');
+      }
+    });
+  });
+</script>

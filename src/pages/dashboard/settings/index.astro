@@ -1,0 +1,35 @@
+---
+import DashboardLayout from '@layouts/DashboardLayout.astro';
+import { PageHeader } from '@features/dashboard/components';
+import { getAuthUser } from '@/lib/auth';
+
+const user = getAuthUser(Astro);
+---
+
+<DashboardLayout title="Settings">
+  <PageHeader
+    title="Account Settings"
+    description="Configuración de tu cuenta de organizador."
+  />
+
+  <div class="rounded-xl border bg-card p-6 space-y-4">
+    <h3 class="font-semibold">Información de la cuenta</h3>
+    <dl class="grid gap-3 md:grid-cols-2 text-sm">
+      <div>
+        <dt class="text-muted-foreground">Correo</dt>
+        <dd class="font-medium">{user?.email ?? '—'}</dd>
+      </div>
+      <div>
+        <dt class="text-muted-foreground">Rol</dt>
+        <dd class="font-medium">{user?.role ?? '—'}</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="rounded-xl border bg-card p-12 text-center mt-6">
+    <p class="text-muted-foreground">
+      Esta sección está en construcción. Próximamente podrás actualizar tu perfil
+      y las preferencias de tu cuenta desde aquí.
+    </p>
+  </div>
+</DashboardLayout>

@@ -1,0 +1,93 @@
+---
+import { Badge } from '@/components/starwind/badge';
+
+export interface Event {
+  id: string;
+  slug: string;
+  name: string;
+  date: string;
+  location: string;
+  status: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
+  registered: number;
+  capacity: number;
+  revenue: number;
+  image?: string;
+}
+
+export interface Props {
+  event: Event;
+}
+
+const { event } = Astro.props;
+
+const statusColors: Record<Event['status'], string> = {
+  draft: 'bg-zinc-500',
+  published: 'bg-green-500',
+  ongoing: 'bg-blue-500',
+  completed: 'bg-purple-500',
+  cancelled: 'bg-red-500',
+};
+
+const fillPercentage = Math.round((event.registered / event.capacity) * 100);
+---
+
+<div class="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden group hover:shadow-md transition-all">
+  <div class="p-5">
+    <div class="flex items-start justify-between mb-4">
+      <div class="flex-1">
+        <div class="flex items-center gap-2 mb-2">
+          <Badge variant="outline" class:list={["text-[10px] font-medium uppercase tracking-wider", statusColors[event.status]]}>
+            {event.status}
+          </Badge>
+        </div>
+        <h3 class="font-semibold text-base mb-1 group-hover:text-blue-600 transition-colors">{event.name}</h3>
+        <p class="text-sm text-muted-foreground">{event.location}</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+      <div class="flex items-center gap-1.5">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <path d="M16 2v4M8 2v4M3 10h18" />
+        </svg>
+        <span>{new Date(event.date).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}</span>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="mb-3">
+      <div class="flex justify-between text-xs mb-1.5">
+        <span class="text-muted-foreground">{event.registered} / {event.capacity} registrados</span>
+        <span class="font-medium">{fillPercentage}%</span>
+      </div>
+      <div class="w-full bg-zinc-100 rounded-full h-2 overflow-hidden">
+        <div
+          class:list={[
+            "h-full rounded-full transition-all",
+            fillPercentage >= 90 ? "bg-red-500" : fillPercentage >= 70 ? "bg-yellow-500" : "bg-green-500"
+          ]}
+          style={`width: ${fillPercentage}%`}
+        ></div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between pt-4 border-t">
+      <span class="text-lg font-bold">${event.revenue.toLocaleString()}</span>
+      <div class="flex gap-2">
+        <a
+          href={`/dashboard/events/${event.slug}`}
+          class="text-xs font-medium text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+        >
+          Edit
+        </a>
+        <a
+          href={`/events/${event.slug}`}
+          class="text-xs font-medium text-zinc-600 hover:text-zinc-700 px-2 py-1 rounded hover:bg-zinc-50 transition-colors"
+        >
+          View
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

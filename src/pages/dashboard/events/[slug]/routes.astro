@@ -1,0 +1,54 @@
+---
+import { actions } from 'astro:actions';
+import RouteUploadForm from '@features/events/components/routes/RouteUploadForm';
+import RouteList from '@features/events/components/routes/RouteList';
+import { PageHeader } from '@features/dashboard/components';
+import DashboardLayout from '@layouts/DashboardLayout.astro';
+import type { BaseEvent } from '@features/events/types/event.type';
+import type { RouteData } from '@features/events/types/route.type';
+
+const { slug } = Astro.params;
+
+// Fetch event data (to get event ID + distances)
+const eventRes = await Astro.callAction(actions.event.getBySlug, { slug: slug as string });
+const event = (eventRes.data as unknown as BaseEvent) ?? null;
+
+if (!event || !event.id) {
+  return Astro.redirect('/dashboard/events');
+}
+
+// Fetch routes for this event
+const routesRes = await Astro.callAction(actions.event.getRoutes, { eventId: event.id });
+const routes = (routesRes.data as unknown as RouteData[]) ?? [];
+
+// Serialize data for React islands
+const routesJson = JSON.stringify(routes);
+const distancesJson = JSON.stringify(
+  (event.distances || []).map((d: any) => ({ id: d.id, km: d.km, name: d.name || `${d.km}K` }))
+);
+---
+
+<DashboardLayout title={`Rutas - ${event.name}`}>
+  <PageHeader
+    title="Rutas del Evento"
+    description={`Gestiona los recorridos para ${event.name}`}
+  />
+
+  <div class="max-w-4xl space-y-8 pb-16">
+    <!-- Upload accordion -->
+    <RouteUploadForm
+      eventId={event.id}
+      distances={distancesJson}
+      client:load
+    />
+
+    <!-- Route list -->
+    <div>
+      <h2 class="font-bold text-xl text-on-surface mb-4">Rutas registradas</h2>
+      <RouteList
+        routes={routesJson}
+        client:load
+      />
+    </div>
+  </div>
+</DashboardLayout>
