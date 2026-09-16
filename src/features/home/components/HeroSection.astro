@@ -1,0 +1,134 @@
+---
+import { Button, Heading } from '@shared/components';
+
+export interface HeroSlide {
+  title: string;
+  badge?: string;
+  heroImage: string;
+  primaryCta?: {
+    text: string;
+    href: string;
+  };
+}
+
+export interface Props {
+  slides: HeroSlide[];
+}
+
+const {
+  slides,
+} = Astro.props;
+---
+
+<section 
+  class="hero-slider relative w-full h-[650px] overflow-hidden bg-inverse-surface group" 
+  id="hero-slider"
+>
+  <div class="slides-container h-full w-full">
+    {slides.map((slide, index) => (
+      <div 
+        class={`slide absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+        data-index={index}
+      >
+        <div class="absolute inset-0">
+          <img
+            src={slide.heroImage}
+            alt={slide.title}
+            width="1920"
+            height="1080"
+            decoding={index === 0 ? 'sync' : 'async'}
+            loading={index === 0 ? 'eager' : 'lazy'}
+            fetchpriority={index === 0 ? 'high' : 'low'}
+            class="w-full h-full object-cover opacity-60"
+          />
+          <div class="absolute inset-0 bg-gradient-to-r from-inverse-surface via-transparent to-transparent"></div>
+        </div>
+
+        <div class="relative h-full flex flex-col justify-center px-12 md:px-24 max-w-7xl mx-auto">
+          <div class="flex flex-col gap-2 mb-10">
+            <span class="text-primary-fixed font-headline font-extrabold tracking-widest uppercase text-sm">
+              {slide.badge || 'Now Trending'}
+            </span>
+            <Heading as="h1" size="xl" class="text-on-primary italic tracking-tighter leading-none text-shadow-editorial !text-6xl md:!text-9xl uppercase">
+              {slide.title}
+            </Heading>
+          </div>
+
+          <div class="flex flex-wrap gap-4">
+            {slide.primaryCta && (
+              <a href={slide.primaryCta.href}>
+                <Button variant="tertiary" size="lg" class="px-12 py-5">
+                  {slide.primaryCta.text}
+                  <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                </Button>
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <button id="prev-slide" class="absolute left-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all opacity-0 group-hover:opacity-100">
+    <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+  </button>
+  <button id="next-slide" class="absolute right-6 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all opacity-0 group-hover:opacity-100">
+    <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+  </button>
+</section>
+
+<style>
+  .text-shadow-editorial { text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+</style>
+
+<script>
+  function initSlider() {
+    const slider = document.getElementById('hero-slider');
+    const slides = slider?.querySelectorAll('.slide');
+    const btnPrev = document.getElementById('prev-slide');
+    const btnNext = document.getElementById('next-slide');
+    
+    if (!slider || !slides || slides.length <= 1) return;
+
+    let currentIndex = 0;
+    let intervalId: number | undefined;
+    const DURATION = 5000;
+
+    const showSlide = (index: number) => {
+      slides.forEach((slide, i) => {
+        if (i === index) {
+          slide.classList.replace('opacity-0', 'opacity-100');
+          slide.classList.replace('z-0', 'z-10');
+        } else {
+          slide.classList.replace('opacity-100', 'opacity-0');
+          slide.classList.replace('z-10', 'z-0');
+        }
+      });
+    };
+
+    const changeSlide = (direction = 1) => {
+      currentIndex = (currentIndex + direction + slides.length) % slides.length;
+      showSlide(currentIndex);
+      resetTimer(); // Crucial para que el tiempo siempre sea el mismo tras un cambio
+    };
+
+    const resetTimer = () => {
+      clearInterval(intervalId);
+      intervalId = window.setInterval(() => changeSlide(1), DURATION);
+    };
+
+    // Eventos de botones
+    btnNext?.addEventListener('click', () => changeSlide(1));
+    btnPrev?.addEventListener('click', () => changeSlide(-1));
+
+    // Pausa en hover
+    slider.addEventListener('mouseenter', () => clearInterval(intervalId));
+    slider.addEventListener('mouseleave', resetTimer);
+
+    // Iniciar
+    resetTimer();
+  }
+
+  initSlider();
+  document.addEventListener('astro:after-swap', initSlider);
+</script>

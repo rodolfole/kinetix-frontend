@@ -1,0 +1,65 @@
+---
+import { Button, Heading } from '@shared/components';
+import { Input } from '@/components/starwind/input';
+import { Label } from '@/components/starwind/label';
+import Container from '@shared/components/ui/Container.astro';
+
+
+export interface Props {
+  title?: string;
+  description?: string;
+  buttonText?: string;
+}
+
+const {
+  title = 'NEVER MISS THE STARTING GUN.',
+  description = 'Join 20,000+ athletes receiving priority registration alerts, technical training tips, and exclusive race results.',
+  buttonText = 'Join the Collective'
+} = Astro.props;
+---
+
+<section class="bg-surface-container-low py-24">
+  <Container>
+    <div class="bg-inverse-surface rounded-2xl p-12 md:p-20 relative overflow-hidden">
+      <div class="absolute -top-20 -right-20 w-80 h-80 bg-primary/20 rounded-full blur-[100px]"></div>
+
+      <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
+        <div class="max-w-xl">
+          <Heading
+            as="h2"
+            size="xl"
+            class="text-on-primary italic tracking-tighter leading-tight mb-6 !text-4xl md:!text-5xl uppercase"
+          >
+            {title}
+          </Heading>
+          <p class="text-surface-variant text-lg font-medium opacity-80 font-body">
+            {description}
+          </p>
+        </div>
+
+        <div class="w-full lg:w-[400px]">
+          <form id="newsletter-form" class="flex flex-col gap-4 !space-y-0">
+            <div class="space-y-2">
+              <Label for="newsletter-email">Email Address</Label>
+              <Input
+                type="email"
+                name="email"
+                id="newsletter-email"
+                placeholder="runner@example.com"
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              variant="tertiary"
+              size="md"
+              class="uppercase tracking-widest"
+            >
+              {buttonText}
+            </Button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </Container>
+</section>

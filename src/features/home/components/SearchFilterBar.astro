@@ -1,0 +1,96 @@
+---
+import { Button } from '@shared/components';
+import { Input } from '@/components/starwind/input';
+import { Label } from '@/components/starwind/label';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/starwind/select';
+import Container from '@shared/components/ui/Container.astro';
+
+
+
+export interface Props {
+  onSearch?: string;
+}
+
+const { onSearch = '/events' } = Astro.props;
+
+// Arrays de datos para los selectores
+const distanceOptions = [
+  { value: "5k", label: "5K" },
+  { value: "10k", label: "10K" },
+  { value: "half-marathon", label: "Half Marathon" },
+  { value: "marathon", label: "Full Marathon" },
+];
+
+const monthOptions = [
+  { value: "2024-10", label: "October 2024" },
+  { value: "2024-11", label: "November 2024" },
+  { value: "2024-12", label: "December 2024" },
+  { value: "2025-01", label: "January 2025" },
+];
+---
+
+<section class="relative z-10 -mt-12 px-6 md:px-12">
+  <Container>
+    <div class="bg-surface-container-lowest p-6 rounded-xl shadow-2xl">
+      <form
+        class="flex flex-col md:flex-row gap-6 items-end !space-y-0"
+        id='search_events'
+      >
+        <div class="w-full md:w-80">
+          <Label for="search" class="sr-only">Search Events</Label>
+          <div class="relative">
+            <Input
+              type="text"
+              id="search"
+              name="q"
+              placeholder="Race name or keyword..."
+              class="pl-12"
+            />
+            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="w-full md:w-56">
+          <Label for="distance" class="sr-only">Distancia</Label>
+          <Select id="distance" name="distance">
+            <SelectTrigger class="bg-surface-container-high border-none rounded-md w-full">
+              <SelectValue placeholder="Selecciona una distancia" />
+            </SelectTrigger>
+            <SelectContent>
+              {distanceOptions.map(option => (
+                <SelectItem value={option.value}>{option.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div class="w-full md:w-56">
+          <Label for="month" class="sr-only">Month</Label>
+          <Select id="month" name="month">
+            <SelectTrigger class="bg-surface-container-high border-none rounded-md w-full">
+              <SelectValue placeholder="Selecciona un mes" />
+            </SelectTrigger>
+            <SelectContent>
+              {monthOptions.map(option => (
+                <SelectItem value={option.value}>{option.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Button
+          type="submit"
+          variant="primary"
+          class="h-14 uppercase tracking-widest"
+          size='lg'
+        >
+          FILTER
+        </Button>
+      </form>
+    </div>
+  </Container>
+</section>

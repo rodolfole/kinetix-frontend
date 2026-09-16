@@ -1,0 +1,53 @@
+---
+import { EventCard } from '@features/events/components';
+import type { BaseEvent } from '@features/events/types/event.type';
+import { Heading } from '@shared/components';
+
+export interface Props {
+  events: BaseEvent[];
+  title?: string;
+  subtitle?: string;
+  eventsFoundLabel?: string;
+}
+
+const {
+  events,
+  title = 'PRÓXIMAS CARRERAS',
+  subtitle = 'Experiencias diseñadas con precisión',
+  eventsFoundLabel = 'EVENTOS ENCONTRADOS'
+} = Astro.props;
+---
+
+<section class="py-24 px-6 md:px-12 max-w-7xl mx-auto">
+  <div class="flex flex-col md:flex-row justify-between items-baseline mb-16 gap-4">
+    <div>
+      <Heading 
+        as="h2" 
+        size="xl" 
+        class="text-blue-700 italic tracking-tighter !text-5xl"
+      >
+        {title}
+      </Heading>
+      <p class="text-zinc-500 font-medium mt-2 uppercase tracking-widest text-sm">
+        {subtitle}
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <span class="bg-primary-fixed-dim text-on-primary-fixed-variant px-3 py-1 rounded-full text-xs font-bold font-headline">
+        {events.length} {eventsFoundLabel}
+      </span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+    {events.map((event, index) => (
+      <EventCard event={event} featured={index === 3} />
+    ))}
+  </div>
+
+  {events.length === 0 && (
+    <div class="text-center py-12">
+      <p class="text-zinc-500 font-body">No hay eventos disponibles</p>
+    </div>
+  )}
+</section>

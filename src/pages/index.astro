@@ -1,0 +1,45 @@
+---
+import { actions } from 'astro:actions';
+import type { BaseEvent } from '@features/events/types/event.type';
+import { HeroSection, SearchFilterBar, EventsGrid, NewsletterCTA } from '@features/home/components';
+import MainLayout from '@layouts/MainLayout.astro';
+
+const result = await Astro.callAction(actions.home.getEvents, {});
+const events = (result.data as unknown as BaseEvent[]) ?? [];
+
+---
+
+<MainLayout title="Kinetix - Running Events Platform" description="Discover and register for the best running events">
+  <!-- Pre-cargamos la primera imagen del hero (LCP) para que el browser la
+       pida en paralelo con el HTML en lugar de descubrirla tarde. -->
+  <link
+    rel="preload"
+    as="image"
+    href="https://lh3.googleusercontent.com/aida-public/AB6AXuBFS13jKVF5n-egRBH1Cu6yvXVBeyWXWD_YY9igzmEVEGAkW_dS3SIn4rpJVDTep6ImMDr5H8ETglKF5iYNXEqk2uoux70Y4SSDXnw2LzqkMb_j4M9lyYWQfrdYWo9n2L_uIlOKiKu7H1okGGhOFQquCAU_jIpH9NNTBYSzjHpseDGDwrXfhExbkq7OyJ6Q2MxtKvC_jhNDRtwL8MyPAPDpH3jyh7h25Vilial_P5RLIJ3RE6iTBsFFHZHPZ4u9i3H9FUm53NNgVj12"
+    fetchpriority="high"
+  />
+  <HeroSection
+    slides={[
+      {
+        title: 'MIDNIGHT\nVELOCITY 10K',
+        heroImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBFS13jKVF5n-egRBH1Cu6yvXVBeyWXWD_YY9igzmEVEGAkW_dS3SIn4rpJVDTep6ImMDr5H8ETglKF5iYNXEqk2uoux70Y4SSDXnw2LzqkMb_j4M9lyYWQfrdYWo9n2L_uIlOKiKu7H1okGGhOFQquCAU_jIpH9NNTBYSzjHpseDGDwrXfhExbkq7OyJ6Q2MxtKvC_jhNDRtwL8MyPAPDpH3jyh7h25Vilial_P5RLIJ3RE6iTBsFFHZHPZ4u9i3H9FUm53NNgVj12',
+        badge: 'Now Trending',
+        primaryCta: { text: 'REGISTER NOW', href: '/events/midnight-velocity' }
+      },
+      {
+        title: 'valencia 10K',
+        heroImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAkbDag8tf8bPkhAlsM1TKR17llHBVSnRFRIUzw_RYhu34WTOG11Sxjl1dXDL4o45KanfiyM0OkMLCA-Bjobsj5tfktHYh9kXGZQFjINTzukdhvC8cN2kjhUmkIoJp5jwYQ_KhtxTwiNBCrcyzfuxkrAObT36TLgGopof98bY_D0dpOUVmp9Ktlp9B-W0-4kyLF5cUh7gLAzy0DlDxelH8N0gk8BtaN5qC59OqapEf_BJWICnWzfc9bFmSPbgZlL9aAGQF2YUnf1PEQ',
+        badge: 'Now Trending',
+        primaryCta: { text: 'REGISTER NOW', href: '/events/valencia-10k' }
+      }
+    ]}
+  />
+
+  <SearchFilterBar />
+
+  <EventsGrid
+    events={events}
+  />
+
+  <NewsletterCTA />
+</MainLayout>
