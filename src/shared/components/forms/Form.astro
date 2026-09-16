@@ -1,0 +1,11 @@
+---
+export interface Props extends astroHTML.JSX.FormHTMLAttributes {
+  class?: string;
+}
+
+const { class: className = '', id } = Astro.props;
+---
+
+<form class:list={['space-y-4', className]} id={id} novalidate>
+  <slot />
+</form>

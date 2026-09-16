@@ -1,0 +1,54 @@
+---
+import { UserActions } from '@features/dashboard/components';
+import { isAuthenticated, getAuthUser } from '@/lib/auth';
+import { Button } from '@shared/components';
+
+const navLinks = [
+  { href: '/events', label: 'Eventos' },
+  { href: '/results', label: 'Resultados' },
+];
+
+const isLoggedIn = isAuthenticated(Astro);
+const user = isLoggedIn ? getAuthUser(Astro) : null;
+---
+
+<nav class="bg-surface/80 backdrop-blur-md sticky top-0 z-50 border-b border-surface-variant/20">
+  <div class="max-w-7xl mx-auto px-6 py-4">
+    <div class="flex justify-between items-center w-full">
+      <div class="flex items-center gap-8">
+        <a href="/" class="text-2xl font-black italic tracking-tighter text-blue-700 font-headline">
+          KINETIX
+        </a>
+
+        <div class="hidden md:flex items-center gap-8">
+          {navLinks.map((link) => (
+            <a
+              href={link.href}
+              class="text-zinc-600 font-medium hover:text-blue-700 transition-colors duration-200 font-body"
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        {isLoggedIn && user ? (
+          <UserActions user={user} />
+        ) : (
+          <div class="flex items-center gap-3">
+            <a href="/auth/login" class="text-zinc-600 hover:text-blue-700 transition-colors font-bold text-sm">
+              Iniciar sesión
+            </a>
+            
+            <a href="/auth/register">
+              <Button variant="primary" size="md">
+                Registrarse
+              </Button>
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</nav>

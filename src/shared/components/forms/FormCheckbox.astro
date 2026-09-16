@@ -1,0 +1,51 @@
+---
+import FormLabel from './FormLabel.astro';
+import FormError from './FormError.astro';
+
+interface Props extends astroHTML.JSX.InputHTMLAttributes {
+  name: string;
+  label: string;
+  error?: string;
+}
+
+const {
+  name,
+  label,
+  error,
+  class: className = '',
+  id,
+  ...rest
+} = Astro.props;
+
+const checkboxId = id || `checkbox-${name}-${rest.value || 'check'}`;
+---
+
+<div class:list={["flex flex-col gap-1", className]}>
+  <label
+    for={checkboxId}
+    class="flex items-center cursor-pointer p-3 border border-zinc-200 rounded-md hover:bg-zinc-50 transition-all group"
+  >
+    <input
+      type="checkbox"
+      id={checkboxId}
+      name={name}
+      class="sr-only peer"
+      {...rest}
+    />
+
+    <div class="w-5 h-5 border border-zinc-300 rounded flex-shrink-0 mr-3 transition-all
+                peer-checked:bg-blue-600 peer-checked:border-blue-600
+                peer-focus-visible:ring-2 peer-focus-visible:ring-blue-600/20
+                flex items-center justify-center">
+      <svg class="w-3 h-3 text-white scale-0 peer-checked:scale-100 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
+        <path d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+
+    <FormLabel for={checkboxId} class="!mb-0 !text-sm cursor-pointer flex-1">
+      {label} {Astro.props.required && <span class="text-red-500">*</span>}
+    </FormLabel>
+  </label>
+
+  {error && <FormError message={error} />}
+</div>

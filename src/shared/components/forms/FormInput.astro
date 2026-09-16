@@ -1,0 +1,51 @@
+---
+import FormError from './FormError.astro';
+import FormLabel from './FormLabel.astro';
+
+interface Props extends astroHTML.JSX.InputHTMLAttributes {
+  label: string;
+  name: string;
+  id: string;
+  error?: string;
+}
+
+const {
+  label,
+  name,
+  id,
+  error,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const inputClasses = [
+  "w-full bg-white border border-zinc-200 text-black py-4 rounded-md transition-all outline-none font-body",
+  "placeholder:text-zinc-400",
+  "focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600",
+  Astro.slots.has('icon') ? "pl-12 pr-4" : "px-6",
+  { "border-red-500 focus:border-red-500 focus:ring-red-500/20": error }
+].join(' ');
+---
+
+<div class:list={["flex flex-col gap-1 w-full", className]}>
+  <FormLabel for={id} class="text-xs font-bold uppercase tracking-widest text-zinc-500">
+    {label} {Astro.props.required && <span class="text-red-500">*</span>}
+  </FormLabel>
+
+  <div class="relative flex items-center">
+    {Astro.slots.has('icon') && (
+      <div class="absolute left-4 flex items-center pointer-events-none text-zinc-400">
+        <slot name="icon" />
+      </div>
+    )}
+
+    <input
+      class={inputClasses}
+      name={name}
+      id={id}
+      {...rest}
+    />
+  </div>
+
+  {error && <FormError message={error} />}
+</div>

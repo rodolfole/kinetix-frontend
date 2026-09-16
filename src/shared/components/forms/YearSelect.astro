@@ -1,0 +1,13 @@
+---
+const currentYear = new Date().getFullYear();
+---
+
+<select
+  id="select-year"
+  name="year"
+  class="px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-0"
+>
+  {Array.from({ length: 100 }, (_, i) => currentYear - 18 - i).map((year) => (
+    <option value={year}>{year}</option>
+  ))}
+</select>

@@ -1,0 +1,48 @@
+---
+import FormLabel from './FormLabel.astro';
+
+interface Props extends astroHTML.JSX.InputHTMLAttributes {
+  name: string;
+  label?: string;
+}
+
+const {
+  name,
+  value,
+  label,
+  class: className = '',
+  id,
+  ...rest
+} = Astro.props;
+
+const radioId = id || `radio-${name}-${value}`;
+---
+
+<div class:list={["flex items-center gap-3", className]}>
+  <div class="relative flex items-center justify-center">
+    <input
+      type="radio"
+      id={radioId}
+      name={name}
+      value={value}
+      class="peer sr-only"
+      {...rest}
+    />
+
+    <label
+      for={radioId}
+      class="w-5 h-5 border-2 border-zinc-300 rounded-full cursor-pointer transition-all
+             peer-checked:border-primary peer-checked:border-[6px]
+             peer-focus-visible:ring-2 peer-focus-visible:ring-primary/20
+             hover:border-zinc-400"
+    >
+    </label>
+  </div>
+
+  {label && (
+    <FormLabel for={radioId} class="!mb-0 cursor-pointer">
+      {label}
+    </FormLabel>
+  )}
+  <slot />
+</div>
