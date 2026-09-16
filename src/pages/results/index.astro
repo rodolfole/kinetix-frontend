@@ -1,0 +1,78 @@
+---
+import MainLayout from '@layouts/MainLayout.astro';
+import { actions } from 'astro:actions';
+import type { BaseEvent } from '@features/events/types/event.type';
+
+// Reuse the home action that loads events. The events page is a thin
+// listing view over the same backend data used by the homepage.
+const result = await Astro.callAction(actions.home.getEvents, {});
+const events = (result.data as unknown as BaseEvent[]) ?? [];
+
+// Sort by event_date descending so past events (results) come first.
+const past = events
+  .filter((e) => new Date(e.date).getTime() < Date.now())
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+const upcoming = events
+  .filter((e) => new Date(e.date).getTime() >= Date.now())
+  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+const fmt = (d: string) =>
+  new Date(d).toLocaleDateString('es-MX', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+---
+
+<MainLayout title="Resultados" description="Resultados y carreras pasadas">
+  <main class="pt-24 pb-20 px-4 md:px-6 min-h-screen bg-zinc-50/50">
+    <div class="max-w-5xl mx-auto">
+      <header class="mb-10 text-center">
+        <h1 class="text-3xl md:text-5xl font-black tracking-tight">Resultados</h1>
+        <p class="mt-3 text-muted-foreground">Carreras pasadas y próximas del calendario Kinetix.</p>
+      </header>
+
+      {past.length > 0 && (
+        <section class="mb-12">
+          <h2 class="text-xl font-semibold mb-4">Carreras pasadas</h2>
+          <ul class="space-y-3">
+            {past.map((event) => (
+              <li class="rounded-xl border bg-white p-4 flex items-center justify-between">
+                <div>
+                  <a href={`/events/${event.slug}`} class="font-semibold text-blue-700 hover:underline">
+                    {event.name}
+                  </a>
+                  <div class="text-sm text-muted-foreground">{event.location.municipality}, {event.location.state}</div>
+                </div>
+                <span class="text-sm text-muted-foreground">{fmt(event.date)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {upcoming.length > 0 && (
+        <section>
+          <h2 class="text-xl font-semibold mb-4">Próximas carreras</h2>
+          <ul class="space-y-3">
+            {upcoming.map((event) => (
+              <li class="rounded-xl border bg-white p-4 flex items-center justify-between">
+                <div>
+                  <a href={`/events/${event.slug}`} class="font-semibold text-blue-700 hover:underline">
+                    {event.name}
+                  </a>
+                  <div class="text-sm text-muted-foreground">{event.location.municipality}, {event.location.state}</div>
+                </div>
+                <span class="text-sm text-muted-foreground">{fmt(event.date)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {past.length === 0 && upcoming.length === 0 && (
+        <p class="text-center text-muted-foreground">Aún no hay carreras para mostrar.</p>
+      )}
+    </div>
+  </main>
+</MainLayout>

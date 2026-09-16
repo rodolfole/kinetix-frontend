@@ -1,0 +1,681 @@
+---
+import { MapPin, Phone, ArrowRight, Check, User, Calendar } from '@lucide/astro';
+import { Button } from '@/components/starwind/button';
+import { Input } from '@/components/starwind/input';
+import { Label } from '@/components/starwind/label';
+import { Textarea } from '@/components/starwind/textarea';
+import RequiredField from '@shared/components/forms/RequiredField.astro';
+import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/starwind/select';
+import { RadioGroup, RadioGroupItem } from '@/components/starwind/radio-group';
+import RegistrationSummary from './RegistrationSummary.astro';
+import ImportantNote from './ImportantNote.astro';
+
+export interface Props {
+  event?: {
+    id: string;
+    slug: string;
+    name: string;
+    date: string;
+    location: { city: string; venue: string; address: string };
+    pricing: { basePrice: number; currency: string };
+    distances?: Array<{ id: string; km: number; name: string; description: string; priceModifier: number }>;
+  };
+  profile?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    gender: string;
+    birth_date: string;
+  };
+  participantFieldsConfig?: string; // JSON string
+}
+
+const { event, profile, participantFieldsConfig: participantFieldsConfigJson } = Astro.props;
+
+// Parse config if provided
+let participantFieldsConfig: Array<{field_name: string; is_required: boolean; is_enabled: boolean}> = [];
+if (participantFieldsConfigJson) {
+  try {
+    participantFieldsConfig = JSON.parse(participantFieldsConfigJson);
+  } catch (e) {
+    participantFieldsConfig = [];
+  }
+}
+
+// Helper functions
+function isFieldEnabled(fieldName: string): boolean {
+  const field = participantFieldsConfig.find(f => f.field_name === fieldName);
+  // If not in config, show by default (except for special fields)
+  if (!field) {
+    // Default: show country, city, state, zip_code
+    return ['country', 'city', 'state', 'zip_code', 'emergency_contact'].includes(fieldName);
+  }
+  return field.is_enabled;
+}
+
+function isFieldRequired(fieldName: string): boolean {
+  // address is ALWAYS required
+  if (fieldName === 'address') return true;
+  const field = participantFieldsConfig.find(f => f.field_name === fieldName);
+  return field ? field.is_required : false;
+}
+
+// Use event distances or fallback
+const distances = event?.distances?.length > 0 ? event.distances : [
+  { id: '5k', km: 5, name: '5K', description: 'Recreativo', priceModifier: 0 },
+  { id: '10k', km: 10, name: '10K', description: 'Competitivo', priceModifier: 200 },
+  { id: '21k', km: 21, name: '21K Media Maratón', description: 'Media Maratón', priceModifier: 400 },
+  { id: '42k', km: 42, name: '42K Maratón', description: 'Maratón', priceModifier: 600 },
+];
+
+const categories = [
+  { value: '18-29', label: '18-29 años' },
+  { value: '30-39', label: '30-39 años' },
+  { value: '40-49', label: '40-49 años' },
+  { value: '50-59', label: '50-59 años' },
+  { value: '60+', label: '60+ años' },
+];
+
+const sizes = [
+  { value: 'XS', label: 'XS' },
+  { value: 'S', label: 'S' },
+  { value: 'M', label: 'M' },
+  { value: 'L', label: 'L' },
+  { value: 'XL', label: 'XL' },
+  { value: 'XXL', label: 'XXL' },
+];
+
+const countries = [
+  { value: 'MX', label: 'México' },
+  { value: 'US', label: 'Estados Unidos' },
+  { value: 'CA', label: 'Canadá' },
+];
+
+const basePrice = event?.pricing?.basePrice || 450;
+const currency = event?.pricing?.currency || 'MXN';
+
+// Serialize config for client-side use
+const configForClient = JSON.stringify(participantFieldsConfig);
+---
+
+<div class="max-w-6xl mx-auto">
+  <!-- Step Indicator -->
+  <div class="mb-8">
+    <div class="flex justify-between items-end mb-2">
+      <span class="text-xs font-bold uppercase tracking-widest text-blue-800">Progreso del Registro</span>
+      <span class="text-xs font-bold text-zinc-500" id="step-label">Paso 1 de 2</span>
+    </div>
+    <div class="flex gap-1 h-2">
+      <div id="progress-1" class="flex-1 rounded-l-full bg-blue-600 transition-colors duration-500"></div>
+      <div id="progress-2" class="flex-1 rounded-r-full bg-zinc-200 transition-colors duration-500"></div>
+    </div>
+    <div class="flex justify-between mt-3">
+      <div id="step-indicator-1" class="flex items-center gap-2 text-xs font-bold uppercase tracking-tighter text-blue-800">
+        <div class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] bg-blue-800 text-white font-bold">1</div>
+        Ubicación
+      </div>
+      <div id="step-indicator-2" class="flex items-center gap-2 text-xs font-bold uppercase tracking-tighter text-zinc-300">
+        <div class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] bg-zinc-200 text-zinc-500 font-bold">2</div>
+        Carrera
+      </div>
+    </div>
+  </div>
+
+  <form id="registration-form" class="space-y-8" data-config={configForClient}>
+    <!-- STEP 1: Personal Info & Location -->
+    <div id="step-1">
+      <div class="mb-8">
+        <h1 class="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-2">Paso 1: Tu Información Personal</h1>
+        <p class="text-muted-foreground">{profile ? 'Verifica que tus datos sean correctos.' : 'Cuéntanos sobre ti para completar tu inscripción.'}</p>
+      </div>
+
+      {profile ? (
+        <div class="bg-white rounded-2xl p-8 md:p-10 shadow-sm border">
+          <div class="flex items-center gap-2 text-green-700 mb-6">
+            <User class="w-5 h-5" />
+            <span class="text-sm font-bold uppercase tracking-widest text-green-800">Tu Perfil</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <Label>Nombre</Label>
+              <div class="p-3 bg-zinc-50 rounded-xl text-zinc-700 font-medium">{profile.first_name}</div>
+            </div>
+            <div class="space-y-2">
+              <Label>Apellido</Label>
+              <div class="p-3 bg-zinc-50 rounded-xl text-zinc-700 font-medium">{profile.last_name}</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <div class="space-y-2">
+              <Label>Género</Label>
+              <div class="p-3 bg-zinc-50 rounded-xl text-zinc-700 font-medium">{profile.gender === 'male' ? 'Masculino' : profile.gender === 'female' ? 'Femenino' : profile.gender === 'other' ? 'Otro' : profile.gender}</div>
+            </div>
+            <div class="space-y-2">
+              <Label>Fecha de Nacimiento</Label>
+              <div class="p-3 bg-zinc-50 rounded-xl text-zinc-700 font-medium">{profile.birth_date}</div>
+            </div>
+            <div class="space-y-2">
+              <Label>Teléfono</Label>
+              <div class="p-3 bg-zinc-50 rounded-xl text-zinc-700 font-medium">{profile.phone}</div>
+            </div>
+          </div>
+
+          <div class="mt-6 space-y-2">
+            <Label>Correo Electrónico</Label>
+            <div class="p-3 bg-zinc-50 rounded-xl text-zinc-700 font-medium">{profile.email}</div>
+          </div>
+
+          <input type="hidden" name="participant_id" value={profile.id} />
+        </div>
+      ) : (
+        <div class="bg-white rounded-2xl p-8 md:p-10 shadow-sm border">
+          <div class="flex items-center gap-2 text-blue-700 mb-6">
+            <User class="w-5 h-5" />
+            <span class="text-sm font-bold uppercase tracking-widest text-blue-800">Datos Personales</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <Label for="first_name">Nombre <RequiredField /></Label>
+              <Input id="first_name" name="first_name" placeholder="Juan" required />
+            </div>
+            <div class="space-y-2">
+              <Label for="last_name">Apellido <RequiredField /></Label>
+              <Input id="last_name" name="last_name" placeholder="Pérez García" required />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <div class="space-y-2">
+              <Label for="gender">Género <RequiredField /></Label>
+              <Select name="gender" required>
+                <SelectTrigger><span>Selecciona...</span></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Masculino</SelectItem>
+                  <SelectItem value="female">Femenino</SelectItem>
+                  <SelectItem value="other">Otro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div class="space-y-2">
+              <Label for="birth_date">Fecha de Nacimiento <RequiredField /></Label>
+              <Input id="birth_date" name="birth_date" type="date" required />
+            </div>
+            <div class="space-y-2">
+              <Label for="phone">Teléfono <RequiredField /></Label>
+              <Input id="phone" name="phone" type="tel" placeholder="+52 555 123 4567" required />
+            </div>
+          </div>
+
+          <div class="mt-6 space-y-2">
+            <Label for="email">Correo Electrónico <RequiredField /></Label>
+            <Input id="email" name="email" type="email" placeholder="juan.perez@email.com" required />
+          </div>
+        </div>
+      )}
+
+      <!-- Address Section (always required) -->
+      <div class="bg-white rounded-2xl p-8 md:p-10 shadow-sm border mt-6">
+        <div class="flex items-center gap-2 text-blue-700 mb-6">
+          <MapPin class="w-5 h-5" />
+          <span class="text-sm font-bold uppercase tracking-widest text-blue-800">Dirección <RequiredField /></span>
+        </div>
+
+        <div class="space-y-2">
+          <Label for="address">Calle y Número <RequiredField /></Label>
+          <Input id="address" name="address" placeholder="Av. Insurgentes Sur 1234, Col. Del Valle" required />
+        </div>
+
+        {isFieldEnabled('country') && (
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <div class="space-y-2">
+              <Label for="country">País {isFieldRequired('country') && <RequiredField />}</Label>
+              <Select name="country">
+                <SelectTrigger><span>Selecciona...</span></SelectTrigger>
+                <SelectContent>
+                  {countries.map(c => (
+                    <SelectItem value={c.value}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {isFieldEnabled('city') && (
+              <div class="space-y-2">
+                <Label for="city">Ciudad {isFieldRequired('city') && <RequiredField />}</Label>
+                <Input id="city" name="city" placeholder="Ciudad de México" />
+              </div>
+            )}
+            {isFieldEnabled('state') && (
+              <div class="space-y-2">
+                <Label for="state">Estado {isFieldRequired('state') && <RequiredField />}</Label>
+                <Input id="state" name="state" placeholder="CDMX" />
+              </div>
+            )}
+          </div>
+        )}
+
+        {isFieldEnabled('zip_code') && (
+          <div class="mt-6">
+            <Label for="zip_code">Código Postal {isFieldRequired('zip_code') && <RequiredField />}</Label>
+            <Input id="zip_code" name="zip_code" placeholder="03100" class="max-w-[200px]" />
+          </div>
+        )}
+      </div>
+
+      <!-- Emergency Contact Section (conditional) -->
+      {(isFieldEnabled('emergency_contact')) && (
+        <div class="bg-white rounded-2xl p-8 md:p-10 shadow-sm border mt-6">
+          <div class="flex items-center gap-2 text-blue-700 mb-6">
+            <Phone class="w-5 h-5" />
+            <span class="text-sm font-bold uppercase tracking-widest text-blue-800">
+              Contacto de Emergencia
+              {isFieldRequired('emergency_contact') && <RequiredField />}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <Label for="emergency_contact_name">
+                Nombre del Contacto
+                {isFieldRequired('emergency_contact') && <RequiredField />}
+              </Label>
+              <Input id="emergency_contact_name" name="emergency_contact_name" placeholder="María García" />
+            </div>
+            <div class="space-y-2">
+              <Label for="emergency_contact_phone">
+                Teléfono de Contacto
+                {isFieldRequired('emergency_contact') && <RequiredField />}
+              </Label>
+              <Input id="emergency_contact_phone" name="emergency_contact_phone" type="tel" placeholder="+52 555 987 6543" />
+            </div>
+          </div>
+
+          {isFieldEnabled('medical_info') && (
+            <div class="mt-6 space-y-2">
+              <Label for="medical_info">
+                Información Médica (Alergias, Condiciones)
+                {isFieldRequired('medical_info') && <RequiredField />}
+              </Label>
+              <Textarea id="medical_info" name="medical_info" placeholder="Lista cualquier condición médica o alergias..." />
+            </div>
+          )}
+        </div>
+      )}
+
+      <!-- Step 1 Action -->
+      <div class="flex justify-end pt-6">
+        <Button 
+          type="button"
+          id="btn-next-step"
+          class="px-10 py-6 text-base font-semibold shadow-lg shadow-blue-500/20"
+        >
+          SIGUIENTE: CARRERA
+          <ArrowRight class="w-5 h-5 ml-2" />
+        </Button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Race Info -->
+    <div id="step-2" class="hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-8">
+          <div class="mb-8">
+            <h1 class="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-2">Paso 2: Información de la Carrera</h1>
+            <p class="text-muted-foreground">Personaliza tu experiencia y asegúrate de que todo esté listo para el día de la carrera.</p>
+          </div>
+
+          <!-- Distance Selection -->
+          <div class="bg-white rounded-2xl p-8 shadow-sm border">
+            <Label class="text-sm font-bold text-blue-800 mb-4 block">SELECCIONA TU DISTANCIA <RequiredField /></Label>
+            <RadioGroup name="distance_id" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {distances.map((d, idx) => {
+                const price = basePrice + d.priceModifier;
+                return (
+                  <label class={`distance-option relative cursor-pointer ${idx === 1 ? 'md:col-span-2' : ''}`}>
+                    <RadioGroupItem name="distance_id" value={d.id} class="peer sr-only" />
+                    <div class="distance-card p-6 bg-zinc-50 border-2 border-zinc-200 rounded-xl transition-all cursor-pointer hover:border-blue-300">
+                      <div class="flex items-center justify-between">
+                        <div>
+                          <div class="text-2xl font-bold text-foreground">{d.km}K</div>
+                          <div class="text-xs text-zinc-500 uppercase font-medium">{d.description}</div>
+                        </div>
+                        <div class="text-right">
+                          <div class="text-xl font-bold text-blue-600">${price}</div>
+                          <div class="text-[10px] text-zinc-400 uppercase">{currency}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
+            </RadioGroup>
+          </div>
+
+          <!-- Category -->
+          <div class="bg-white rounded-2xl p-8 shadow-sm border mt-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <Label for="category">Categoría por Edad <RequiredField /></Label>
+                <Select name="category" required>
+                  <SelectTrigger>
+                    <span>Selecciona...</span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(cat => (
+                      <SelectItem value={cat.value}>{cat.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div class="space-y-2">
+                <Label for="time">Tiempo Estimado (HH:MM)</Label>
+                <Input id="time" name="time" placeholder="01:30" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Team & Size -->
+          <div class="bg-white rounded-2xl p-8 shadow-sm border mt-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <Label for="team">Equipo / Club</Label>
+                <Input id="team" name="team" placeholder="Nombre de tu equipo (opcional)" />
+              </div>
+              <div class="space-y-2">
+                <Label class="text-sm font-medium text-foreground mb-3 block">Talla de Playera <RequiredField /></Label>
+                <RadioGroup name="size" class="flex flex-wrap gap-2">
+                  {sizes.map(s => (
+                    <label class="size-option cursor-pointer">
+                      <RadioGroupItem name="size" value={s.value} class="peer sr-only" />
+                      <div class="size-card w-12 h-12 flex items-center justify-center bg-zinc-100 border-2 border-zinc-200 rounded-lg font-bold text-sm transition-all cursor-pointer hover:bg-zinc-200 peer-data-[state=checked]:bg-blue-600 peer-data-[state=checked]:border-blue-600 peer-data-[state=checked]:text-white peer-data-[state=checked]:shadow-md">
+                        {s.value}
+                      </div>
+                    </label>
+                  ))}
+                </RadioGroup>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <div class="pt-6">
+            <Button 
+              type="submit" 
+              class="w-full py-6 text-lg font-semibold shadow-lg shadow-blue-500/20"
+            >
+              COMPLETAR REGISTRO
+              <Check class="w-5 h-5 ml-2" />
+            </Button>
+            <p class="text-center text-xs text-muted-foreground mt-3">Al hacer clic, serás redirigido a la pasarela de pago segura.</p>
+          </div>
+        </div>
+
+        <!-- Summary Sidebar -->
+        <RegistrationSummary event={event} basePrice={basePrice} currency={currency} />
+      </div>
+    </div>
+  </form>
+
+  <!-- Important Note -->
+  <ImportantNote>
+    Asegúrate de que tu correo sea correcto. Recibirás tu folio de registro y código QR para recoger tu kit el día de la carrera. Tus datos personales están protegidos por nuestra política de privacidad.
+  </ImportantNote>
+</div>
+
+<script>
+  import { z } from 'zod';
+  import { actions } from 'astro:actions';
+  import { navigate } from 'astro:transitions/client';
+  import { showFieldError, clearAllFieldErrors, setupFieldErrorListeners } from '@/lib/form-utils';
+
+  const form = document.getElementById('registration-form') as HTMLFormElement;
+  const step1 = document.getElementById('step-1') as HTMLElement;
+  const step2 = document.getElementById('step-2') as HTMLElement;
+  const btnNext = document.getElementById('btn-next-step') as HTMLButtonElement;
+
+  // Get participant fields config from window
+  const config: Array<{field_name: string; is_required: boolean; is_enabled: boolean}> = (window as any).__PARTICIPANT_FIELDS_CONFIG__ || [];
+
+  // Get participant profile from window
+  const profile: { id: string; first_name: string; last_name: string; email: string; phone: string; gender: string; birth_date: string } | null = (window as any).__PROFILE__ || null;
+
+  // Check if user is logged in (has profile)
+  const isLoggedIn = !!profile;
+
+  // Helper to check if field is required
+  function isFieldRequired(fieldName: string): boolean {
+    if (fieldName === 'address') return true;
+    const field = config.find(f => f.field_name === fieldName);
+    return field ? field.is_required : false;
+  }
+
+  // Helper to check if field is enabled
+  function isFieldEnabled(fieldName: string): boolean {
+    const field = config.find(f => f.field_name === fieldName);
+    if (!field) {
+      // Default: show country, city, state, zip_code, emergency_contact
+      return ['country', 'city', 'state', 'zip_code', 'emergency_contact'].includes(fieldName);
+    }
+    return field.is_enabled;
+  }
+
+  // Setup listeners to clear errors on input
+  setupFieldErrorListeners('#registration-form');
+
+  // Schema para Step 1 (Personal Info) - build dynamically based on config and login status
+  function getStep1Schema() {
+    const shape: Record<string, any> = {
+      address: z.string().min(1, 'La dirección es obligatoria'),
+    };
+
+    // For logged-in users, only address is required, profile fields come from participant_id
+    if (isLoggedIn) {
+      // Just participant_id (hidden) is enough - profile data is from the existing participant
+      shape.participant_id = z.string().uuid().optional();
+    } else {
+      // Anonymous user - all fields required
+      shape.first_name = z.string().min(1, 'El nombre es obligatorio');
+      shape.last_name = z.string().min(1, 'El apellido es obligatorio');
+      shape.gender = z.enum(['male', 'female', 'other'], { required_error: 'El género es obligatorio' });
+      shape.birth_date = z.string().min(1, 'La fecha de nacimiento es obligatoria');
+      shape.email = z.string().email('El email no es válido');
+      shape.phone = z.string().min(10, 'El teléfono debe tener al menos 10 dígitos');
+    }
+
+    // Add optional fields based on config
+    if (isFieldEnabled('country')) {
+      shape.country = z.string().optional();
+    }
+    if (isFieldEnabled('city')) {
+      shape.city = z.string().optional();
+    }
+    if (isFieldEnabled('state')) {
+      shape.state = z.string().optional();
+    }
+    if (isFieldEnabled('zip_code')) {
+      shape.zip_code = z.string().optional();
+    }
+    if (isFieldEnabled('emergency_contact')) {
+      shape.emergency_contact_name = z.string().optional();
+      shape.emergency_contact_phone = z.string().optional();
+    }
+    if (isFieldEnabled('medical_info')) {
+      shape.medical_info = z.string().optional();
+    }
+
+    return z.object(shape);
+  }
+
+  // Schema para Step 2 (Race Info)
+  const step2Schema = z.object({
+    distance_id: z.string().min(1, 'Selecciona una distancia'),
+    category: z.string().min(1, 'Selecciona una categoría'),
+    time: z.string().optional(),
+    team: z.string().optional(),
+    size: z.string().min(1, 'Selecciona una talla'),
+  });
+
+  function validateStep1(data: Record<string, any>): { valid: boolean; errors: Record<string, string> } {
+    const errors: Record<string, string> = {};
+    const schema = getStep1Schema();
+    const result = schema.safeParse(data);
+    if (!result.success) {
+      result.error.issues.forEach((issue: any) => {
+        const field = issue.path[0] as string;
+        errors[field] = issue.message;
+      });
+    }
+    return { valid: Object.keys(errors).length === 0, errors };
+  }
+
+  function validateStep2(data: Record<string, any>): { valid: boolean; errors: Record<string, string> } {
+    const errors: Record<string, string> = {};
+    const result = step2Schema.safeParse(data);
+    if (!result.success) {
+      result.error.issues.forEach((issue: any) => {
+        const field = issue.path[0] as string;
+        errors[field] = issue.message;
+      });
+    }
+    return { valid: Object.keys(errors).length === 0, errors };
+  }
+
+  // Update UI for step transition
+  function goToStep(step: number) {
+    const isStep2 = step === 2;
+    step1.classList.toggle('hidden', isStep2);
+    step2.classList.toggle('hidden', !isStep2);
+
+    const indicators = [
+      { el: document.getElementById('step-indicator-1')!, active: true, completed: isStep2 },
+      { el: document.getElementById('step-indicator-2')!, active: isStep2, completed: false },
+    ];
+
+    indicators.forEach(({ el, active, completed }) => {
+      const circle = el.querySelector('div')!;
+      if (completed) {
+        circle.textContent = '✓';
+        circle.className = 'w-5 h-5 rounded-full flex items-center justify-center text-[10px] bg-green-500 text-white font-bold';
+        el.className = 'flex items-center gap-2 text-xs font-bold uppercase tracking-tighter text-green-600';
+      } else if (active) {
+        circle.className = 'w-5 h-5 rounded-full flex items-center justify-center text-[10px] bg-blue-800 text-white font-bold';
+        el.className = 'flex items-center gap-2 text-xs font-bold uppercase tracking-tighter text-blue-800';
+      } else {
+        circle.textContent = '2';
+        circle.className = 'w-5 h-5 rounded-full flex items-center justify-center text-[10px] bg-zinc-200 text-zinc-500 font-bold';
+        el.className = 'flex items-center gap-2 text-xs font-bold uppercase tracking-tighter text-zinc-300';
+      }
+    });
+
+    document.getElementById('progress-1')!.className = `flex-1 rounded-l-full transition-colors duration-500 ${isStep2 ? 'bg-green-500' : 'bg-blue-600'}`;
+    document.getElementById('progress-2')!.className = `flex-1 rounded-r-full transition-colors duration-500 ${isStep2 ? 'bg-blue-600' : 'bg-zinc-200'}`;
+    document.getElementById('step-label')!.textContent = `Paso ${step} de 2`;
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Botón NEXT - validar step 1
+  btnNext?.addEventListener('click', () => {
+    clearAllFieldErrors();
+
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    const { valid, errors } = validateStep1(data);
+
+    if (!valid) {
+      Object.entries(errors).forEach(([field, message]) => {
+        showFieldError(field, message);
+      });
+      return;
+    }
+
+    goToStep(2);
+  });
+
+  // Submit - validar step 2 y enviar
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearAllFieldErrors();
+
+    const formData = new FormData(form);
+    const data: Record<string, any> = Object.fromEntries(formData.entries());
+    const { valid, errors } = validateStep2(data);
+
+    if (!valid) {
+      Object.entries(errors).forEach(([field, message]) => {
+        showFieldError(field, message);
+      });
+      return;
+    }
+
+    // Extraer event slug de la URL
+    const pathParts = window.location.pathname.split('/');
+    const eventSlugIndex = pathParts.indexOf('events');
+    const eventSlug = eventSlugIndex !== -1 ? pathParts[eventSlugIndex + 1] : '';
+
+    // Get event_id from the page data (passed via Astro props)
+    const eventId = (window as any).__EVENT_ID__ || '';
+
+    try {
+      const personalInfo: Record<string, any> = {
+        address: data.address,
+      };
+
+      // If logged in, use participant_id; otherwise send all profile fields
+      if (isLoggedIn && data.participant_id) {
+        personalInfo.participant_id = data.participant_id;
+      } else {
+        personalInfo.first_name = data.first_name;
+        personalInfo.last_name = data.last_name;
+        // Backend expects single-letter gender codes (M/F/O), frontend uses full words
+        const genderMap: Record<string, string> = { male: 'M', female: 'F', other: 'O' };
+        personalInfo.gender = genderMap[data.gender] || data.gender || 'O';
+        personalInfo.birth_date = data.birth_date;
+        personalInfo.email = data.email;
+        personalInfo.phone = data.phone;
+      }
+
+      const result = await actions.registration.completeRegistration({
+        event_id: eventId,
+        event_slug: eventSlug,
+        personal_info: personalInfo,
+        race_info: {
+          distance_id: data.distance_id,
+          category: data.category,
+          // Backend exige string (no acepta null para campos opcionales)
+          time: data.time || '',
+          team: data.team || '',
+          size: data.size,
+        },
+      });
+
+      if (result.error) {
+        alert(result.error.message || 'Error al procesar el registro');
+        return;
+      }
+
+      const redirectUrl = result.data?.redirectUrl || `${window.location.pathname}/exito`;
+      navigate(redirectUrl);
+
+    } catch (error) {
+      alert('Error al procesar el registro');
+    }
+  });
+</script>
+
+<style>
+  /* Importante: Ajusta la ruta a tu archivo CSS principal */
+  @reference "@/styles/global.css";
+
+  .distance-option:has(input:checked) .distance-card {
+    @apply border-blue-600 bg-blue-50 ring-1 ring-blue-600;
+  }
+
+  .size-option:has(input:checked) .size-card {
+    @apply bg-blue-600 border-blue-600 text-white shadow-md;
+  }
+</style>

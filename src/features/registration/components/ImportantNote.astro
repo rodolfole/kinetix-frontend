@@ -1,0 +1,15 @@
+---
+import { AlertCircle } from '@lucide/astro';
+---
+
+<aside class="mt-10 p-6 bg-zinc-100 rounded-2xl flex items-start gap-4 border border-zinc-200">
+  <div class="bg-blue-600 rounded-full p-2 text-white shrink-0">
+    <AlertCircle class="w-4 h-4" />
+  </div>
+  <div>
+    <h4 class="text-sm font-bold text-foreground mb-1">Nota Importante</h4>
+    <p class="text-xs text-muted-foreground leading-relaxed">
+      <slot />
+    </p>
+  </div>
+</aside>

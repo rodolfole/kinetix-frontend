@@ -1,0 +1,187 @@
+---
+import { Button, Heading } from '@shared/components';
+import { Input } from '@/components/starwind/input';
+import { Label } from '@/components/starwind/label';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/starwind/select';
+
+const countries = [
+  { value: 'MX', label: 'México' },
+  { value: 'US', label: 'Estados Unidos' },
+];
+
+const mexicanStates = [
+  { value: 'JAL', label: 'Jalisco' },
+  { value: 'CDMX', label: 'Ciudad de México' },
+  { value: 'NL', label: 'Nuevo León' },
+  { value: 'EDOMEX', label: 'Estado de México' },
+];
+
+const sexOptions = [
+  { value: 'masculino', label: 'Masculino' },
+  { value: 'femenino', label: 'Femenino' },
+];
+---
+
+<div id="step-1" class="space-y-8">
+  <div class="mb-8">
+    <Heading as="h1" class="!text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-4">Paso 1: Información Personal</Heading>
+    <p class="text-zinc-500 text-lg">Completa tus datos personales para crear tu perfil de participante.</p>
+  </div>
+
+  <!-- Identity Section -->
+  <div class="bg-white rounded-2xl p-8 md:p-10 shadow-sm border border-zinc-100">
+    <div class="flex items-center gap-2 text-blue-700 mb-8">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+      <Heading as="h3" size="sm" class="uppercase tracking-widest font-black !text-blue-800">Datos de Identidad</Heading>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-6 gap-x-6 gap-y-6">
+      <div class="md:col-span-6">
+        <div class="space-y-2">
+          <Label for="nombre">Nombre(s)</Label>
+          <Input id="nombre" name="nombre" placeholder="Ej. Juan Carlos" class="bg-zinc-100 border-none" required />
+        </div>
+      </div>
+
+      <div class="md:col-span-3">
+        <div class="space-y-2">
+          <Label for="paterno">Apellido Paterno</Label>
+          <Input id="paterno" name="paterno" placeholder="Ej. García" class="bg-zinc-100 border-none" required />
+        </div>
+      </div>
+
+      <div class="md:col-span-3">
+        <div class="space-y-2">
+          <Label for="materno">Apellido Materno</Label>
+          <Input id="materno" name="materno" placeholder="Ej. López" class="bg-zinc-100 border-none" />
+        </div>
+      </div>
+
+      <div class="md:col-span-3">
+        <div class="space-y-2">
+          <Label for="sexo">Sexo</Label>
+          <Select name="sexo" id="sexo" required>
+            <SelectTrigger class="bg-zinc-100 w-full">
+              <SelectValue placeholder="Selecciona una opción" />
+            </SelectTrigger>
+            <SelectContent>
+              {sexOptions.map(option => (
+                <SelectItem value={option.value}>{option.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div class="md:col-span-3">
+        <div class="space-y-2">
+          <Label for="nacimiento">Fecha de Nacimiento</Label>
+          <Input id="nacimiento" name="nacimiento" type="date" class="bg-zinc-100 border-none" required />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Section -->
+  <div class="bg-white rounded-2xl p-8 md:p-10 shadow-sm border border-zinc-100">
+    <div class="flex items-center gap-2 text-blue-700 mb-8">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+      </svg>
+      <Heading as="h3" size="sm" class="uppercase tracking-widest font-black !text-blue-800">Contacto</Heading>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <div class="space-y-2">
+          <Label for="email">Email</Label>
+          <Input id="email" name="email" type="email" placeholder="nombre@ejemplo.com" class="bg-zinc-100 border-none" required />
+        </div>
+      </div>
+
+      <div>
+        <div class="space-y-2">
+          <Label for="confirmEmail">Confirmar Email</Label>
+          <Input id="confirmEmail" name="confirmEmail" type="email" placeholder="nombre@ejemplo.com" class="bg-zinc-100 border-none" required />
+        </div>
+      </div>
+
+      <div class="md:col-span-2">
+        <div class="space-y-2">
+          <Label for="telefono">Teléfono</Label>
+          <Input id="telefono" name="telefono" type="tel" placeholder="+52 00 0000 0000" class="bg-zinc-100 border-none" required />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location Section -->
+  <div class="bg-white rounded-2xl p-8 md:p-10 shadow-sm border border-zinc-100">
+    <div class="flex items-center gap-2 text-blue-700 mb-8">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+      <Heading as="h3" size="sm" class="uppercase tracking-widest font-black !text-blue-800">Ubicación</Heading>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div>
+        <div class="space-y-2">
+          <Label for="pais">País de Residencia</Label>
+          <Select name="pais" id="pais" required>
+            <SelectTrigger class="bg-zinc-100 w-full">
+              <SelectValue placeholder="País" />
+            </SelectTrigger>
+            <SelectContent>
+              {countries.map(option => (
+                <SelectItem value={option.value}>{option.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div>
+        <div class="space-y-2">
+          <Label for="estado">Estado</Label>
+          <Select name="estado" id="estado" required>
+            <SelectTrigger class="bg-zinc-100 w-full">
+              <SelectValue placeholder="Selecciona un Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              {mexicanStates.map(option => (
+                <SelectItem value={option.value}>{option.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div>
+        <div class="space-y-2">
+          <Label for="cp">Código Postal</Label>
+          <Input id="cp" name="cp" placeholder="Ej. 44100" class="bg-zinc-100 border-none" required />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 1 Action -->
+  <div class="flex justify-end pt-8">
+    <Button
+      type="button"
+      id="btn-next-step"
+      variant="tertiary"
+      size="lg"
+      class="font-black italic px-12 py-5 shadow-blue-500/40"
+    >
+      SIGUIENTE: INFO DE CARRERA
+      <svg slot="after" class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+      </svg>
+    </Button>
+  </div>
+</div>

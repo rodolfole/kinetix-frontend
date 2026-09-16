@@ -1,0 +1,91 @@
+---
+import { Input } from '@/components/starwind/input';
+import { Label } from '@/components/starwind/label';
+import { MUNICIPALITIES, STATES } from '@features/registration';
+import RequiredField from '@shared/components/forms/RequiredField.astro';
+---
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <!-- Estado -->
+  <div class="space-y-2">
+    <Label for="state">Estado <RequiredField /></Label>
+    <select 
+      id="state" 
+      name="state" 
+      class="h-12 w-full rounded-xl border border-input bg-transparent px-4 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      required
+    >
+      <option value="" disabled selected>Selecciona un Estado...</option>
+      {STATES.map(estado => (
+        <option value={estado.value}>{estado.label}</option>
+      ))}
+    </select>
+  </div>
+
+  <!-- Municipio -->
+  <div class="space-y-2">
+    <Label for="municipality">Municipio <RequiredField /></Label>
+    <select 
+      id="municipality"
+      name="municipality" 
+      class="h-12 w-full rounded-xl border border-input bg-transparent px-4 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      required
+      disabled
+    >
+      <option value="" disabled selected>Selecciona un estado primero...</option>
+    </select>
+  </div>
+
+  <!-- Código Postal -->
+  <div class="space-y-2">
+    <Label for="zip_code">Código Postal <RequiredField /></Label>
+    <Input id="zip_code" name="zip_code" placeholder="44100" required />
+  </div>
+</div>
+
+<script define:vars={{ MUNICIPALITIES }}>
+  const municipalities = MUNICIPALITIES
+  const stateSelect = document.getElementById('state');
+  const municipalitySelect = document.getElementById('municipality');
+
+  // Función simple - actualizar municipio cuando cambia estado
+  function updateMunicipality(state) {
+    if (!municipalitySelect) return;
+    
+    municipalitySelect.innerHTML = '';
+    
+    if (state && municipalities[state]) {
+      municipalitySelect.disabled = false;
+      
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'Selecciona...';
+      opt.disabled = true;
+      opt.selected = true;
+      municipalitySelect.appendChild(opt);
+      
+      municipalities[state].forEach(mun => {
+        const o = document.createElement('option');
+        o.value = mun;
+        o.textContent = mun;
+        municipalitySelect.appendChild(o);
+      });
+    } else {
+      municipalitySelect.disabled = true;
+      
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'Selecciona un estado primero...';
+      opt.disabled = true;
+      opt.selected = true;
+      municipalitySelect.appendChild(opt);
+    }
+  }
+
+  // Escuchar cambio en estado - evento nativo de select
+  if (stateSelect) {
+    stateSelect.addEventListener('change', (e) => {
+      updateMunicipality(e.target.value);
+    });
+  }
+</script>

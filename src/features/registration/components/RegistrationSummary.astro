@@ -1,0 +1,62 @@
+---
+import { MapPin, Activity } from '@lucide/astro';
+
+export interface Props {
+  event?: {
+    id: string;
+    slug: string;
+    name: string;
+    date: string;
+    location: { city: string; venue: string; address: string };
+    pricing: { basePrice: number; currency: string };
+  };
+  basePrice?: number;
+  currency?: string;
+}
+
+const { event, basePrice = 450, currency = 'MXN' } = Astro.props;
+
+const eventDate = event?.date 
+  ? new Date(event.date).toLocaleDateString('es-MX', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    })
+  : '15 de octubre de 2024';
+---
+
+<aside class="lg:col-span-4">
+  <div class="bg-white rounded-2xl p-6 shadow-sm border sticky top-6">
+    <h3 class="text-xl font-bold text-foreground mb-6">Resumen del Registro</h3>
+
+    <div class="space-y-4 mb-6">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+          <Activity class="w-5 h-5" />
+        </div>
+        <div>
+          <p class="text-[10px] font-medium text-zinc-500 uppercase">Fecha del Evento</p>
+          <p class="text-sm font-bold text-foreground">{eventDate}</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+          <MapPin class="w-5 h-5" />
+        </div>
+        <div>
+          <p class="text-[10px] font-medium text-zinc-500 uppercase">Ubicación</p>
+          <p class="text-sm font-bold text-foreground">{event?.location?.city || 'Por definir'}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t pt-4">
+      <div class="flex justify-between items-center">
+        <span class="text-sm font-medium text-zinc-500">Costo de Inscripción</span>
+        <span class="text-2xl font-bold text-foreground">${basePrice}</span>
+      </div>
+    </div>
+  </div>
+</aside>

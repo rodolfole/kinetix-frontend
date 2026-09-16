@@ -1,0 +1,46 @@
+---
+import ParticipantLayout from '@layouts/ParticipantLayout.astro';
+import { getAuthUser } from '@/lib/auth';
+
+const user = getAuthUser(Astro);
+const pageTitle = 'Mi Dashboard';
+---
+
+<ParticipantLayout title={pageTitle}>
+  <div class="space-y-6">
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="text-sm text-muted-foreground">Mis Inscripciones</div>
+        <div class="text-3xl font-bold">5</div>
+      </div>
+      <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="text-sm text-muted-foreground">Carreras Completadas</div>
+        <div class="text-3xl font-bold">3</div>
+      </div>
+      <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="text-sm text-muted-foreground">Próxima Carrera</div>
+        <div class="text-3xl font-bold">1</div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl border shadow-sm">
+      <h3 class="text-lg font-semibold mb-4">Próximas Inscripciones</h3>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between border-b pb-4">
+          <div>
+            <div class="font-medium">10K Valencia Marathon</div>
+            <div class="text-sm text-muted-foreground">15 de diciembre de 2024</div>
+          </div>
+          <div class="text-blue-600 font-medium">10K</div>
+        </div>
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="font-medium">Media Maratón Ciudad de México</div>
+            <div class="text-sm text-muted-foreground">20 de enero de 2025</div>
+          </div>
+          <div class="text-blue-600 font-medium">21K</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ParticipantLayout>
