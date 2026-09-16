@@ -1,0 +1,185 @@
+@import "tailwindcss";
+
+/* Kinetix Design System - Custom Color Variables */
+@layer base {
+  :root {
+    /* Primary Colors */
+    --primary-dim: #004da4;
+    --primary: #0058ba;
+    --primary-container: #6c9fff;
+    --primary-fixed: #6c9fff;
+    --primary-fixed-dim: #5091ff;
+
+    /* Secondary Colors */
+    --secondary-dim: #2a47ab;
+    --secondary: #3854b7;
+    --secondary-container: #c6cfff;
+    --secondary-fixed: #c6cfff;
+    --secondary-fixed-dim: #b3c1ff;
+
+    /* Tertiary Colors */
+    --tertiary-dim: #7a2f86;
+    --tertiary: #883c93;
+    --tertiary-container: #f39cfb;
+    --tertiary-fixed: #f39cfb;
+    --tertiary-fixed-dim: #e48fed;
+
+    /* Error Colors */
+    --error-dim: #9f0519;
+    --error: #b31b25;
+    --error-container: #fb5151;
+
+    /* Surface Colors */
+    --surface-dim: #d6d4d3;
+    --surface: #f9f6f5;
+    --surface-bright: #f9f6f5;
+    --surface-container-lowest: #ffffff;
+    --surface-container-low: #f3f0ef;
+    --surface-container: #eae7e7;
+    --surface-container-high: #e5e2e1;
+    --surface-container-highest: #dfdcdc;
+    --surface-variant: #dfdcdc;
+    --surface-tint: #0058ba;
+
+    /* Background & Foreground */
+    --background: #f9f6f5;
+    --on-background: #2f2e2e;
+    --on-surface: #2f2e2e;
+    --on-surface-variant: #5c5b5b;
+
+    /* Primary Text Colors */
+    --on-primary: #f0f2ff;
+    --on-primary-fixed: #000000;
+    --on-primary-fixed-variant: #002a60;
+    --on-primary-container: #00214e;
+
+    /* Secondary Text Colors */
+    --on-secondary: #f2f1ff;
+    --on-secondary-fixed: #00298b;
+    --on-secondary-fixed-variant: #2b48ac;
+    --on-secondary-container: #1f3ea2;
+
+    /* Tertiary Text Colors */
+    --on-tertiary: #ffeefb;
+    --on-tertiary-fixed: #41004d;
+    --on-tertiary-fixed-variant: #6a1f77;
+    --on-tertiary-container: #60136d;
+
+    /* Other Text Colors */
+    --on-error: #ffefee;
+    --on-error-container: #570008;
+
+    /* Inverse Colors */
+    --inverse-surface: #0e0e0e;
+    --inverse-primary: #4a8eff;
+    --inverse-on-surface: #9e9c9c;
+
+    /* Outline */
+    --outline: #787676;
+    --outline-variant: #afacac;
+  }
+
+  /* Custom utility classes */
+  .font-headline {
+    font-family: 'Lexend', system-ui, sans-serif;
+  }
+
+  .font-body {
+    font-family: 'Manrope', system-ui, sans-serif;
+  }
+
+  .kinetic-gradient {
+    background: linear-gradient(45deg, #0058ba 0%, #6c9fff 100%);
+  }
+
+  .text-shadow-editorial {
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Tailwind extensions */
+@layer utilities {
+  .text-on-surface {
+    color: var(--on-surface);
+  }
+  .text-on-primary {
+    color: var(--on-primary);
+  }
+  .text-on-surface-variant {
+    color: var(--on-surface-variant);
+  }
+  .text-primary {
+    color: var(--primary);
+  }
+  .text-primary-dim {
+    color: var(--primary-dim);
+  }
+  .text-primary-fixed {
+    color: var(--primary-fixed);
+  }
+  .text-secondary {
+    color: var(--secondary);
+  }
+  .text-tertiary {
+    color: var(--tertiary);
+  }
+  .text-on-tertiary {
+    color: var(--on-tertiary);
+  }
+
+  .bg-surface {
+    background-color: var(--surface);
+  }
+  .bg-surface-container-lowest {
+    background-color: var(--surface-container-lowest);
+  }
+  .bg-surface-container-low {
+    background-color: var(--surface-container-low);
+  }
+  .bg-surface-container {
+    background-color: var(--surface-container);
+  }
+  .bg-surface-container-high {
+    background-color: var(--surface-container-high);
+  }
+  .bg-surface-container-highest {
+    background-color: var(--surface-container-highest);
+  }
+  .bg-inverse-surface {
+    background-color: var(--inverse-surface);
+  }
+  .bg-primary {
+    background-color: var(--primary);
+  }
+  .bg-primary-dim {
+    background-color: var(--primary-dim);
+  }
+  .bg-primary-container {
+    background-color: var(--primary-container);
+  }
+  .bg-secondary {
+    background-color: var(--secondary);
+  }
+  .bg-tertiary {
+    background-color: var(--tertiary);
+  }
+
+  .border-surface-variant {
+    border-color: var(--surface-variant);
+  }
+
+  .rounded-none {
+    border-radius: 0.125rem;
+  }
+  .rounded-lg {
+    border-radius: 0.25rem;
+  }
+  .rounded-xl {
+    border-radius: 0.5rem;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
