@@ -82,3 +82,5 @@ Cookies (`lib/cookies.ts`): `access_token` and `refresh_token` httpOnly, `sameSi
 | `DashboardLayout` and `ParticipantLayout` duplicate the shell | `src/layouts/` | One `AppShellLayout` with a sidebar prop |
 
 Details in [reports/CODE_AUDIT.md](reports/CODE_AUDIT.md) and [reports/ISLANDS_AND_PREACT.md](reports/ISLANDS_AND_PREACT.md).
+
+Feature specs live in [specs/](specs/) and implementation plans in [../plans/](../plans/README.md).
