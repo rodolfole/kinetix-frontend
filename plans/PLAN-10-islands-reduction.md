@@ -20,7 +20,7 @@ Follow ADR-9 stages: baseline, cheap wins independent of Preact, spike on a bran
 ## Tasks
 - [ ] T1 Measure baseline: run `pnpm build`, record raw/gzip sizes of the React runtime chunk and each island chunk in `docs/` — test first: n/a (measurement; exception: no behavior change) — files: `docs/reports/BUNDLE_BASELINE.md`
 - [ ] T2 Convert `RouteList` to `.astro` + `<script>` — test first: port `RouteList` behavior checks to a Vitest DOM test before deleting the island — files: `src/features/events/components/routes/RouteList.tsx`, new `RouteList.astro`
-- [ ] T3 Convert `IconPicker` to `.astro` + `<script>` — test first: adapt `IconPicker.test.tsx` — files: `src/features/events/components/IconPicker.tsx`, new `IconPicker.astro`
+- [ ] ~~T3 Convert `IconPicker` to `.astro` + `<script>`~~ Dropped: `IconPicker` is rendered inside `ItineraryEditor.tsx:140`, so it moves only together with its parent (see docs/reports/ISLANDS_AND_PREACT.md, action 4)
 - [ ] T4 Mount `DistanceRoutePreview` as an island in `[eventSlug].astro` instead of manual `createElement` + `react-dom/client` — test first: existing `DistanceRoutePreview.test.tsx` plus E2E 05 — files: `src/pages/dashboard/events/[eventSlug].astro`
 - [ ] T5 Split the `[eventSlug].astro` inline script (~1,900 lines) into feature modules under `src/features/events/` — test first: unit tests for each extracted pure function — files: `src/pages/dashboard/events/[eventSlug].astro`, `src/features/events/scripts/*`
 - [ ] T6 Re-measure after T2-T5 and compare with T1 — files: `docs/reports/BUNDLE_BASELINE.md`
