@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:8085/api/v1';
+const API_URL_FALLBACK = 'http://localhost:8085/api/v1';
+
+export const getBaseUrl = (): string => import.meta.env.API_URL || API_URL_FALLBACK;
 
 interface ApiResponse<T = any> {
   data?: T;
@@ -8,23 +10,26 @@ interface ApiResponse<T = any> {
 
 interface FetchOptions extends RequestInit {
   timeout?: number;
+  /** Bearer token; sent as `Authorization: Bearer <token>`. */
+  token?: string;
 }
 
 async function fetchApi<T = any>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<ApiResponse<T>> {
-  const { timeout = 10000, ...fetchOptions } = options;
+  const { timeout = 10000, token, ...fetchOptions } = options;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(`${getBaseUrl()}${endpoint}`, {
       ...fetchOptions,
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...fetchOptions.headers,
       },
     });
