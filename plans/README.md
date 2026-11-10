@@ -65,3 +65,4 @@ Update `Status` and `Updated` in the plan and in the index below whenever it cha
 | [8](PLAN-8-admin-payments.md) | Admin and payments | In progress | backend `SPEC-platform-payments` | ADR-5, 6 |
 | [9](PLAN-9-strict-tdd-and-bug-fixes.md) | Strict TDD and bug fixes | Approved | auth, home, events, registration | ADR-5, 6, 8 |
 | [10](PLAN-10-islands-reduction.md) | Islands reduction | Draft | none | ADR-3, 7, 9 |
+| [11](PLAN-11-fixes-and-completion.md) | Fixes, completion and bundle diet | Approved | dashboard, registration, events | ADR-3, 5, 6, 9 |
