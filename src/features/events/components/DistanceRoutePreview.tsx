@@ -1,20 +1,11 @@
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
 import { IconRoute, IconX } from '@tabler/icons-react';
+import { parseGPX, type ParsedGPX } from '@lib/gpx-parser';
 import type { RouteData } from '../types/route.type';
 
 // Lazy-loaded Leaflet / Recharts — same code path as /dashboard/events/[slug]/routes
 const RouteMap = lazy(() => import('./routes/RouteMap'));
 const ElevationProfile = lazy(() => import('./routes/ElevationProfile'));
-
-interface ParsedGPX {
-  coords: [number, number][];
-  elevationProfile: [number, number][];
-  totalDistanceKm: number;
-  totalElevationGain: number;
-  minElevation: number;
-  maxElevation: number;
-  name: string;
-}
 
 interface DistanceRoutePreviewProps {
   initialName?: string;
@@ -23,66 +14,7 @@ interface DistanceRoutePreviewProps {
 }
 
 /** Haversine entre dos [lat, lng] en km. */
-function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function parseGPX(xmlContent: string): ParsedGPX {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xmlContent, 'text/xml');
-
-  const nameEl = doc.querySelector('gpx > trk > name');
-  const name = nameEl?.textContent?.trim() || 'Unnamed Route';
-
-  const trkpts = doc.querySelectorAll('gpx > trk > trkseg > trkpt');
-  if (!trkpts.length) {
-    throw new Error('No track points found in GPX file');
-  }
-
-  const coords: [number, number][] = [];
-  const rawElevations: number[] = [];
-
-  trkpts.forEach((pt) => {
-    const lat = parseFloat(pt.getAttribute('lat') || '0');
-    const lng = parseFloat(pt.getAttribute('lon') || '0');
-    const eleEl = pt.querySelector('ele');
-    const ele = eleEl ? parseFloat(eleEl.textContent || '0') : 0;
-    coords.push([lat, lng]);
-    rawElevations.push(ele);
-  });
-
-  const elevationProfile: [number, number][] = [];
-  let cumulativeDist = 0;
-  let totalElevGain = 0;
-  elevationProfile.push([0, rawElevations[0]]);
-  for (let i = 1; i < coords.length; i++) {
-    cumulativeDist += haversineKm(
-      coords[i - 1][0], coords[i - 1][1], coords[i][0], coords[i][1]
-    );
-    const diff = rawElevations[i] - rawElevations[i - 1];
-    if (diff > 0) totalElevGain += diff;
-    elevationProfile.push([parseFloat(cumulativeDist.toFixed(3)), parseFloat(rawElevations[i].toFixed(1))]);
-  }
-
-  const elevations = rawElevations.filter((e) => !isNaN(e));
-  return {
-    coords,
-    elevationProfile,
-    totalDistanceKm: parseFloat(cumulativeDist.toFixed(2)),
-    totalElevationGain: parseFloat(totalElevGain.toFixed(1)),
-    minElevation: elevations.length ? parseFloat(Math.min(...elevations).toFixed(1)) : 0,
-    maxElevation: elevations.length ? parseFloat(Math.max(...elevations).toFixed(1)) : 0,
-    name,
-  };
-}
+// haversineKm now lives in @lib/gpx-parser; this component imports parseGPX from there.
 
 export default function DistanceRoutePreview({
   initialName = '',
