@@ -47,7 +47,7 @@ const total = result?.data?.total ?? 0;
           {payouts.map((p) => (
             <tr class="border-t border-zinc-100">
               <td class="px-4 py-2">
-                <span class={[
+                <span class:list={[
                   'inline-block px-2 py-0.5 rounded text-xs font-semibold',
                   p.status === 'sent' ? 'bg-emerald-100 text-emerald-700'
                     : p.status === 'failed' ? 'bg-red-100 text-red-700'

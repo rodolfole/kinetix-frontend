@@ -94,3 +94,60 @@ describe('event.getBySlug', () => {
     expect((globalThis.fetch as any).mock.calls[0][1].headers.Authorization).toBeUndefined();
   });
 });
+
+describe('event.getDistanceTypes', () => {
+  const originalFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it('unwraps the backend { message, data } envelope into the distance type array', async () => {
+    globalThis.fetch = vi.fn(async () =>
+      jsonResponse({ message: 'ok', data: [{ id: 'dt1', name: '10K', km: 10 }] })
+    ) as any;
+
+    const types = await (event.getDistanceTypes as any).handler({}, { cookies: cookiesWith('tok') });
+
+    expect(types).toEqual([{ id: 'dt1', name: '10K', km: 10 }]);
+    expect((globalThis.fetch as any).mock.calls[0][1].headers.Authorization).toBe('Bearer tok');
+  });
+
+  it('returns an empty array when the envelope has no data list', async () => {
+    globalThis.fetch = vi.fn(async () => jsonResponse({ message: 'ok' })) as any;
+
+    const types = await (event.getDistanceTypes as any).handler({}, { cookies: cookiesWith() });
+
+    expect(types).toEqual([]);
+  });
+});
+
+describe('event.getAgeCategories', () => {
+  const originalFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it('unwraps the backend { message, data } envelope into the age category array', async () => {
+    globalThis.fetch = vi.fn(async () =>
+      jsonResponse({
+        message: 'ok',
+        data: [{ id: 'ac1', name: '18-29', min_age: 18, max_age: 29, display_order: 1 }],
+      })
+    ) as any;
+
+    const categories = await (event.getAgeCategories as any).handler({}, { cookies: cookiesWith('tok') });
+
+    expect(categories).toEqual([
+      { id: 'ac1', name: '18-29', min_age: 18, max_age: 29, display_order: 1 },
+    ]);
+    expect((globalThis.fetch as any).mock.calls[0][1].headers.Authorization).toBe('Bearer tok');
+  });
+
+  it('returns an empty array when the envelope has no data list', async () => {
+    globalThis.fetch = vi.fn(async () => jsonResponse({ message: 'ok' })) as any;
+
+    const categories = await (event.getAgeCategories as any).handler({}, { cookies: cookiesWith() });
+
+    expect(categories).toEqual([]);
+  });
+});

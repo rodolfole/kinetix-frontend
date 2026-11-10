@@ -26,11 +26,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # TODO: drop continue-on-error once plans/PLAN-11 T1 removes the
-      # 27 pre-existing type errors (triage table there).
       - name: Astro check
         run: pnpm exec astro check
-        continue-on-error: true
 
       - name: Unit tests
         run: pnpm test

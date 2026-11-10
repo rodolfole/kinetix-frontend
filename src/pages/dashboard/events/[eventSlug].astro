@@ -1014,6 +1014,7 @@ const pageTitle2 = pageTitle;
     );
 
     function repopulateMunicipios(estadoNombre: string) {
+      if (!muni) return;
       const found = mexico.find((l) => l.estado === estadoNombre);
       muni.innerHTML = '<option value="">Selecciona un municipio…</option>';
       if (found) {
@@ -1775,7 +1776,7 @@ const pageTitle2 = pageTitle;
       // que sobreescribimos manualmente el array tras colectar.
       const rawCategories = collectDynamicItems('categories-container', [
         'distance_id', 'age_category_id', 'gender', 'num_places', 'is_elite',
-      ]) as Record<string, Record<string, string>>;
+      ]) as Record<string, Record<string, string | number[]>>;
       for (const id of Object.keys(rawCategories)) {
         const card = document.querySelector<HTMLElement>(`#categories-container [data-id="${id}"]`);
         if (!card) continue;

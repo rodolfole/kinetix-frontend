@@ -2,6 +2,7 @@
 import { RegisterForm } from '@features/registration/components';
 import MainLayout from '@layouts/MainLayout.astro';
 import { api } from '@lib/api';
+import type { ParticipantFieldConfig } from '@features/registration/types/registration.type';
 
 // Get event slug from URL
 const { slug } = Astro.params;
@@ -9,6 +10,7 @@ const { slug } = Astro.params;
 // Fetch event details from API
 let event = null;
 let participantFieldsConfig: ParticipantFieldConfig[] = [];
+let distances: { id: string; name: string; kilometers: number; price?: number }[] = [];
 let profile = null;
 let error = null;
 
@@ -25,9 +27,18 @@ try {
 if (event?.id) {
   try {
     const detailResponse = await api.get(`/events/${event.id}/detail`);
-    if (detailResponse.data?.data?.participant_fields_config) {
-      participantFieldsConfig = detailResponse.data.data.participant_fields_config;
+    const detail = detailResponse.data?.data;
+    if (detail?.participant_fields_config) {
+      participantFieldsConfig = detail.participant_fields_config;
     }
+    // Distancias reales del evento para el formulario. El contrato final de
+    // los props de RegisterForm (incluido participantFieldsConfig) se cierra
+    // en PLAN-11 T2.
+    distances = (detail?.distances ?? []).map((d: { id: string; km: number }) => ({
+      id: d.id,
+      name: `${d.km}K`,
+      kilometers: d.km,
+    }));
   } catch (e) {
     // Config not available, use defaults
     participantFieldsConfig = [];
@@ -103,9 +114,9 @@ const profileJson = JSON.stringify(profile);
       </div>
     )}
     <RegisterForm
-      event={event}
-      profile={profile}
-      participantFieldsConfig={participantFieldsConfigJson}
+      eventId={eventId}
+      eventName={event?.name ?? ''}
+      distances={distances}
     />
   </main>
 </MainLayout>

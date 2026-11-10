@@ -40,6 +40,12 @@ describe('personalInfoSchema', () => {
     const r = personalInfoSchema.safeParse({ ...baseValid, gender: 'unknown' });
     expect(r.success).toBe(false);
   });
+
+  it('keeps the custom gender message', () => {
+    const r = personalInfoSchema.safeParse({ ...baseValid, gender: 'unknown' });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.issues[0].message).toBe('Selecciona un género');
+  });
 });
 
 describe('raceInfoSchema', () => {

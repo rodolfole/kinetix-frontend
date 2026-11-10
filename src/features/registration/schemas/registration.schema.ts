@@ -6,7 +6,7 @@ export const personalInfoSchema = z.object({
   second_last_name: z.string().min(1, 'Apellido materno requerido'),
   birth_date: z.string().min(1, 'Fecha de nacimiento requerida'),
   gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say'], {
-    errorMap: () => ({ message: 'Selecciona un género' }),
+    error: 'Selecciona un género',
   }),
   phone: z.string().min(10, 'Teléfono debe tener al menos 10 dígitos'),
   email: z.string().email('Email inválido'),

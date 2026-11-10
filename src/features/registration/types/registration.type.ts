@@ -1,3 +1,13 @@
+/**
+ * Per-event participant field config as returned by the event detail payload.
+ * TODO(PLAN-11 T2): confirm the backend contract (`field_name` vs `section_name`).
+ */
+export interface ParticipantFieldConfig {
+  field_name: string;
+  is_enabled: boolean;
+  is_required: boolean;
+}
+
 export interface PersonalInfo {
   first_name: string;
   last_name: string;

@@ -57,6 +57,20 @@ export type EventDistance = {
   registered?: number;
 };
 
+/**
+ * Distance as rendered on the event page: the base fields plus the display
+ * extras that the event detail action maps from the backend (`km`,
+ * `description`, `elevation`, `timeLimit`, `capacity`). Lists built from other
+ * endpoints can leave the extras out.
+ */
+export type EventDistanceView = EventDistance & {
+  km?: number;
+  description?: string;
+  elevation?: number | null;
+  timeLimit?: string | null;
+  capacity?: number;
+};
+
 export type EventRegistration = {
   eventId: string;
   additionalOptions?: {

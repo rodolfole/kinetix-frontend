@@ -8,6 +8,24 @@ vi.mock('astro:actions', () => ({
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { auth } from './auth.action';
 
+// The mocked `defineAction` returns its config, so the raw handler is reachable
+// at `.handler`; the real type is a callable action without that property. A
+// defined action resolves to `{ data: <handler output> } | { error }`, so the
+// handler output is the `data` field of the success branch. This helper casts
+// the mocked shape back instead of changing what the tests assert.
+type HandlerOutput<A extends (...args: any[]) => any> = Extract<
+  Awaited<ReturnType<A>>,
+  { error: undefined }
+>['data'];
+
+type MockHandler<A extends (...args: any[]) => any> = (
+  input: Parameters<A>[0],
+  ctx: any
+) => Promise<HandlerOutput<A>>;
+
+const rawHandler = <A extends (...args: any[]) => any>(action: A): MockHandler<A> =>
+  (action as unknown as { handler: MockHandler<A> }).handler;
+
 describe('auth.action', () => {
   const originalFetch = globalThis.fetch;
 
@@ -46,7 +64,7 @@ describe('auth.action', () => {
       });
 
       const cookies = makeCookies();
-      const result = await auth.login.handler(
+      const result = await rawHandler(auth.login)(
         { email: 'a@b.com', password: 'secret123' },
         { cookies } as any
       );
@@ -70,7 +88,7 @@ describe('auth.action', () => {
       mockFetchOnce({ message: 'Invalid credentials' }, { status: 401 });
 
       const cookies = makeCookies();
-      const result = await auth.login.handler(
+      const result = await rawHandler(auth.login)(
         { email: 'a@b.com', password: 'wrong' },
         { cookies } as any
       );
@@ -84,7 +102,7 @@ describe('auth.action', () => {
       mockFetchOnce({ message: 'Server error' }, { status: 500 });
 
       const cookies = makeCookies();
-      const result = await auth.login.handler(
+      const result = await rawHandler(auth.login)(
         { email: 'a@b.com', password: 'pw' },
         { cookies } as any
       );
@@ -98,7 +116,7 @@ describe('auth.action', () => {
       globalThis.fetch = vi.fn().mockRejectedValueOnce(new Error('Network down')) as any;
 
       const cookies = makeCookies();
-      const result = await auth.login.handler(
+      const result = await rawHandler(auth.login)(
         { email: 'a@b.com', password: 'pw' },
         { cookies } as any
       );
@@ -112,7 +130,7 @@ describe('auth.action', () => {
       mockFetchOnce({ user: { id: 'u1' } });
 
       const cookies = makeCookies();
-      const result = await auth.login.handler(
+      const result = await rawHandler(auth.login)(
         { email: 'a@b.com', password: 'pw' },
         { cookies } as any
       );
@@ -126,7 +144,7 @@ describe('auth.action', () => {
   describe('logout', () => {
     it('deletes auth cookies and returns success (no fetch)', async () => {
       const cookies = makeCookies();
-      const result = await auth.logout.handler({}, { cookies } as any);
+      const result = await rawHandler(auth.logout)({}, { cookies } as any);
 
       expect(result.error).toBe(false);
       expect(result.message).toMatch(/cerrada/i);

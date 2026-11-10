@@ -28,7 +28,7 @@ export const registerSchema = z.object({
   second_last_name: z.string().min(1, 'El apellido materno es requerido'),
   birth_date: z.string().min(1, 'La fecha de nacimiento es requerida'),
   gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say'], {
-    errorMap: () => ({ message: 'Selecciona un género válido' }),
+    error: 'Selecciona un género válido',
   }),
   phone: z.string().min(10, 'El teléfono debe tener al menos 10 dígitos'),
   email: z.string().email('Correo electrónico inválido'),
@@ -98,7 +98,7 @@ export const eventDistanceSchema = z.object({
   distance_type_id: z.string().min(1, 'Selecciona un tipo de distancia'),
   capacity: z.string().min(1, 'La capacidad es requerida'),
   surface: z.enum(['asphalt', 'trail', 'track', 'mixed'], {
-    errorMap: () => ({ message: 'Selecciona una superficie válida' }),
+    error: 'Selecciona una superficie válida',
   }),
 }).passthrough();
 

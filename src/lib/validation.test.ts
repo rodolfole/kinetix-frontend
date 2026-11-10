@@ -4,6 +4,7 @@ import {
   loginSchema,
   registerSchema,
   organizerRegisterSchema,
+  eventDistanceSchema,
 } from './validation';
 
 describe('validatePassword', () => {
@@ -82,6 +83,27 @@ describe('registerSchema', () => {
   it('rejects short phone', () => {
     const r = registerSchema.safeParse({ ...baseValid, phone: '123' });
     expect(r.success).toBe(false);
+  });
+
+  it('keeps the custom gender message', () => {
+    const r = registerSchema.safeParse({ ...baseValid, gender: 'unknown' });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.issues[0].message).toBe('Selecciona un género válido');
+  });
+});
+
+describe('eventDistanceSchema', () => {
+  const baseValid = { distance_type_id: 'dt1', capacity: '10', surface: 'asphalt' as const };
+
+  it('accepts a valid distance', () => {
+    const r = eventDistanceSchema.safeParse(baseValid);
+    expect(r.success).toBe(true);
+  });
+
+  it('keeps the custom surface message', () => {
+    const r = eventDistanceSchema.safeParse({ ...baseValid, surface: 'mud' });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.issues[0].message).toBe('Selecciona una superficie válida');
   });
 });
 

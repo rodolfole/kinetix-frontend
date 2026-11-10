@@ -1,6 +1,6 @@
 # PLAN-11: Frontend fixes, completion and bundle diet
 
-- Status: Approved
+- Status: In progress (T1 done)
 - Created: 2026-11-06 | Updated: 2026-11-06
 - Spec: docs/specs/SPEC-dashboard.md, docs/specs/SPEC-registration.md, docs/specs/SPEC-events.md
 - ADRs: ADR-3, ADR-5, ADR-6, ADR-9
@@ -23,14 +23,16 @@ Fix the pending type errors, finish the pages that still render placeholder data
 Keep ADR-3 (islands) and the target patterns of `docs/PATTERNS.md`. Bundle work follows PLAN-10 stages; this plan orders and extends them with the check errors and page completion.
 
 ## Tasks
-- [ ] T1 Fix the 27 `astro check` errors and gate CI on it — test first: the check itself — files:
-  - T1a `src/features/events/actions/event.action.ts:334` and `:316` — `response.data?.data` on a typed array (api client returns `{data}` generic: fix generic usage or map).
-  - T1b `src/features/auth/actions/auth.action.test.ts` (6) — `handler` property after the mocked `defineAction`; update the mock type.
-  - T1c `src/features/events/components/EventDistances.astro` (5) — `ts(2339)` on mapped distance fields.
-  - T1d `src/features/events/components/EventRunnerKit.astro` + `src/pages/admin/payments.astro` — `ts(2322)` prop type mismatches.
-  - T1e `src/features/registration/schemas/registration.schema.ts` and `src/lib/validation.ts` (3) — `ts(2769)`.
-  - T1f `src/pages/dashboard/events/[eventSlug].astro` (7) — `muni` possibly null (after the inline script split in T4, most of it disappears).
-  - T1g `src/pages/events/[slug]/registration/index.astro` (2) — unknown `ParticipantFieldConfig` and `RegisterForm` `Props` mismatch (page passes `event/profile`; the form expects `eventId/eventName/distances`).
+- [x] T1 Fix the 27 `astro check` errors and gate CI on it — test first: the check itself — files:
+  - Evidence: `astro check` went from 27 errors (event.action.ts 2, auth.action.test.ts 6, EventDistances.astro 5, EventRunnerKit.astro 1, registration.schema.ts 1, lib/validation.ts 2, admin/payments.astro 1, dashboard/events/[eventSlug].astro 7, events/[slug]/registration/index.astro 2) to 0 errors / exit 0, 267 files. `vitest run`: 24 files, 223 tests green (was 215; +8 new). CI gate: `continue-on-error` removed from the Astro check step in `.github/workflows/ci.yml`.
+  - Deferred to T2: the page now passes the real form contract (`eventId`/`eventName`/`distances`); `participantFieldsConfig`/`profile` are still only exported as `window.__*__` globals and not consumed by `RegisterForm`, and the `ParticipantFieldConfig` shape (`field_name`) is a local placeholder until the backend `event_field_config` contract is confirmed.
+  - [x] T1a `src/features/events/actions/event.action.ts:334` and `:316` — now typed with a `BackendListEnvelope<T>` (`{ message, data }`) and read via `response.data?.data ?? []`; both callers updated.
+  - [x] T1b `src/features/auth/actions/auth.action.test.ts` (6) — the mock's shape is restored by a `rawHandler` helper (`handler` typed from the action's `data` branch); no assertion changed.
+  - [x] T1c `src/features/events/components/EventDistances.astro` (5) — new `EventDistanceView` type (base `EventDistance` + `km`/`description`/`elevation`/`timeLimit`/`capacity`) assigned from `event.distances`.
+  - [x] T1d `src/features/events/components/EventRunnerKit.astro` (`Heading level` → `as="h2"`, same markup) + `src/pages/admin/payments.astro` (`class={[...]}` → `class:list={[...]}`).
+  - [x] T1e `src/features/registration/schemas/registration.schema.ts` and `src/lib/validation.ts` (3) — `errorMap` in `z.enum` replaced with zod v4's `error` param; the custom Spanish messages now actually surface (previously ignored at runtime, pinned by new tests).
+  - [x] T1f `src/pages/dashboard/events/[eventSlug].astro` (7) — null guard inside the municipio cascade helper and `prize_amounts` typed as `string | number[]`.
+  - [x] T1g `src/pages/events/[slug]/registration/index.astro` (2) — `ParticipantFieldConfig` moved to `registration.type.ts`; `RegisterForm` receives `eventId`/`eventName`/`distances` built from the event detail payload.
 - [ ] T2 Registration page/form contract: settle the real props (the `participantFieldsConfig` flow) and the field requirements map — test first: form test — files: `src/features/registration/components/RegisterForm.astro`, the page and `events/consts/field-sections.ts`.
 - [ ] T3 `RegisterForm` empty-slug guard: render an error state instead of "/events//registration/exito" — test first: form test — files: `RegisterForm.astro`.
 - [ ] T4 Split `src/pages/dashboard/events/[eventSlug].astro` (2,022 lines incl. ~1,170 inline script) into feature modules (form sections, field-config editor, pricing, awards, sponsors, locations, route preview forum) — test first: extract each piece with a unit test — files: `src/pages/dashboard/events/`, `src/features/events/**`.
