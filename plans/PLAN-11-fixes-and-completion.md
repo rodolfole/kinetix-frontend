@@ -1,6 +1,6 @@
 # PLAN-11: Frontend fixes, completion and bundle diet
 
-- Status: In progress (T1-T3, T5, T8 done; T11-T12 done except .env.example)
+- Status: Done (pending: the .env.example line for the user; e2e suite needs the backend up; the Preact spike is a separate decision under ADR-9)
 - Created: 2026-11-06 | Updated: 2026-11-06
 - Spec: docs/specs/SPEC-dashboard.md, docs/specs/SPEC-registration.md, docs/specs/SPEC-events.md
 - ADRs: ADR-3, ADR-5, ADR-6, ADR-9
@@ -70,6 +70,10 @@ Keep ADR-3 (islands) and the target patterns of `docs/PATTERNS.md`. Bundle work 
 - [x] T12 Env template: document `API_URL` in `.env.example` with the comment "server-side only", replacing `API_URL` leftovers and remove the Tailwind 3 leftover `tailwind.config.mjs` — blocked by the guard on `.env.example` (user must paste the line) — files: `.env.example` (user), `tailwind.config.mjs` (delete).
 
 ## Log
+- 2026-11-06 (worker): T4 editor split (2,023->460 lines, 46 editor tests, byte-identical HTML), T6 dashboard actions (16 tests) + real-data pages, T7 AppShellLayout + merged Sidebar (15 pages), T9 inline SVG icons + deps removed, T10 RouteList as .astro + client:visible islands (bundle table in ISLANDS_AND_PREACT.md). Final: vitest 35/338, check 0, build green, SSR smoke 200s, headless-chromium editor smoke clean.
+- 2026-11-06 (parent): leftovers fixed: dashboard action registered in src/actions/index.ts, admin payments via Astro.callAction, e2e 05 real-data assertion, pnpm-lock regenerated.
+
+## Verification
 - 2026-11-06 (parent, inline): T2 applyFieldRequirements (4 tests) wired via the page config <script>; T3 slug guard + test; T5 decode-before-match in resolveAccess (33/33 route-guard+middleware tests) with the redirect param now carrying the decoded path; T8 cookie handoff (registration-data, 900s, httpOnly) with test; T11 AGENTS.md/README refreshed; T12 tailwind.config.mjs deleted. .env.example remains blocked by the safety policy: add `API_URL=http://localhost:8085/api/v1` (server-side only comment). The untracked placeholder page `src/pages/registration/exito.astro` is unreferenced and can be deleted by the user.
 
 ## Verification
