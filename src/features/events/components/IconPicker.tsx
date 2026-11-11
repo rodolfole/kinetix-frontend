@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef, type ComponentType } from 'react';
 import {
-  IconTicket,
-  IconCoffee,
-  IconHeadphones,
-  IconClock,
-  IconUsersGroup,
-  IconShirt,
-  IconMedal,
-  IconTrophy,
-  IconBackpack,
-  IconMask,
-  IconBottle,
-} from '@tabler/icons-react';
+  BackpackIcon,
+  BottleIcon,
+  ClockIcon,
+  CoffeeIcon,
+  HeadphonesIcon,
+  MaskIcon,
+  MedalIcon,
+  ShirtIcon,
+  TicketIcon,
+  TrophyIcon,
+  UsersGroupIcon,
+} from './icons';
 
 /**
  * Icon picker — visual catalog for itinerary and kit items.
@@ -20,7 +20,7 @@ import {
  * (or adding a new one) is a one-line edit. Each catalog entry exposes:
  * - a stable `value` string persisted to the DB (matches backend enum-like icon)
  * - a `label` shown on hover/focus
- * - a Tabler icon React component
+ * - an inline SVG component from `./icons`
  *
  * Rendering is funnel-shaped: a horizontal strip of icon tiles with a search
  * field. The tile renders the icon at large size for visual scanning and stays
@@ -34,20 +34,20 @@ export interface IconOption {
 }
 
 export const ITINERARY_ICON_CATALOG: readonly IconOption[] = [
-  { value: 'ticket', label: 'Ticket / Inscripción', Icon: IconTicket },
-  { value: 'coffee', label: 'Café / Hidratación', Icon: IconCoffee },
-  { value: 'headphones', label: 'Audífonos DJ / Música', Icon: IconHeadphones },
-  { value: 'clock', label: 'Reloj / Horario', Icon: IconClock },
-  { value: 'users-group', label: 'Comunidad / Grupo', Icon: IconUsersGroup },
+  { value: 'ticket', label: 'Ticket / Inscripción', Icon: TicketIcon },
+  { value: 'coffee', label: 'Café / Hidratación', Icon: CoffeeIcon },
+  { value: 'headphones', label: 'Audífonos DJ / Música', Icon: HeadphonesIcon },
+  { value: 'clock', label: 'Reloj / Horario', Icon: ClockIcon },
+  { value: 'users-group', label: 'Comunidad / Grupo', Icon: UsersGroupIcon },
 ];
 
 export const KIT_ICON_CATALOG: readonly IconOption[] = [
-  { value: 'shirt', label: 'Playera', Icon: IconShirt },
-  { value: 'medal', label: 'Medalla', Icon: IconMedal },
-  { value: 'trophy', label: 'Trofeo', Icon: IconTrophy },
-  { value: 'backpack', label: 'Mochila / Bolsa', Icon: IconBackpack },
-  { value: 'mask', label: 'Buff / Tubular', Icon: IconMask },
-  { value: 'bottle', label: 'Termo', Icon: IconBottle },
+  { value: 'shirt', label: 'Playera', Icon: ShirtIcon },
+  { value: 'medal', label: 'Medalla', Icon: MedalIcon },
+  { value: 'trophy', label: 'Trofeo', Icon: TrophyIcon },
+  { value: 'backpack', label: 'Mochila / Bolsa', Icon: BackpackIcon },
+  { value: 'mask', label: 'Buff / Tubular', Icon: MaskIcon },
+  { value: 'bottle', label: 'Termo', Icon: BottleIcon },
 ];
 
 interface IconPickerProps {

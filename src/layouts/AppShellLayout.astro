@@ -1,0 +1,98 @@
+---
+import '../styles/starwind.css';
+import { ClientRouter } from 'astro:transitions';
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from '@/components/starwind/sidebar';
+import { Sidebar, UserActions } from '@features/dashboard/components';
+import {
+  getShellBrand,
+  getSidebarItems,
+  isSectionAllowedForRole,
+  resolveShellRole,
+  type ShellMenuItem,
+  type ShellRole,
+} from './app-shell';
+
+/**
+ * The single shell for every private page: organizer dashboard, participant
+ * dashboard and the admin pages. Sidebar items, brand and the role guard come
+ * from `./app-shell` (unit tested); pages only pass their title.
+ */
+export interface Props {
+  title: string;
+  /** Session role; defaults to the role in the `user` cookie. */
+  role?: ShellRole;
+  /** Override the navigation items (defaults to the role's menu). */
+  items?: ShellMenuItem[];
+}
+
+// El middleware ya verificó la auth - aquí solo necesitamos los datos del usuario
+const userCookie = Astro.cookies.get('user');
+let user: Record<string, unknown> | null = null;
+if (userCookie?.value) {
+  try {
+    user = JSON.parse(userCookie.value);
+  } catch {
+    // Si falla el parse, el middleware ya habrá redirect
+  }
+}
+
+const pathname = Astro.url.pathname;
+const role: ShellRole = Astro.props.role ?? resolveShellRole(user) ?? 'organizer';
+const brand = getShellBrand(role);
+const items = Astro.props.items ?? getSidebarItems(role, pathname);
+const roleAllowed = isSectionAllowedForRole(role, pathname);
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="es" data-shell-role={role}>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <ClientRouter />
+</head>
+<body>
+  {
+    roleAllowed ? (
+      <SidebarProvider defaultOpen={true}>
+        <div class="flex min-h-screen w-full">
+          <Sidebar items={items} title={brand.title} subtitle={brand.subtitle} icon={brand.icon} />
+          <SidebarInset>
+            <header class="flex h-12 shrink-0 items-center gap-2 border-b px-4 bg-background sticky top-0 z-40">
+              <SidebarTrigger />
+              <h2 class="text-lg font-semibold">{title}</h2>
+              <div class="ml-auto">
+                <UserActions user={user || undefined} />
+              </div>
+            </header>
+
+            <div class="flex-1 p-6">
+              <slot />
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    ) : (
+      <main class="flex min-h-screen items-center justify-center p-8" data-shell-denied={role}>
+        <div class="max-w-md text-center">
+          <h1 class="text-xl font-semibold">Esta sección no corresponde a tu rol</h1>
+          <p class="mt-2 text-sm text-muted-foreground">
+            Vuelve a tu panel para continuar.
+          </p>
+          <a
+            href={role === 'participant' ? '/participant/dashboard' : '/dashboard'}
+            class="mt-4 inline-block text-sm font-medium text-blue-600 hover:underline"
+          >
+            Ir a mi panel
+          </a>
+        </div>
+      </main>
+    )
+  }
+</body>
+</html>

@@ -1,0 +1,68 @@
+---
+import { Input } from '@/components/starwind/input';
+import { Label } from '@/components/starwind/label';
+
+export interface Props {
+  sponsorTiers: { value: string; label: string }[];
+}
+
+const { sponsorTiers } = Astro.props;
+---
+
+<template id="sponsor-tpl">
+  <div class="card border rounded-lg p-4 flex gap-4 items-center bg-white shadow-sm animate-fade-up">
+    <div class="flex-1 grid gap-4 md:grid-cols-3">
+      <Input data-name="name" placeholder="Nombre de la Marca" required />
+      <select
+        data-name="tier"
+        class="flex h-10 rounded-md border border-zinc-200 bg-white px-3 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+      >
+        {sponsorTiers.map((s) => (
+          <option value={s.value}>{s.label}</option>
+        ))}
+      </select>
+      <Input type="file" data-name="logo_url" />
+    </div>
+    <button type="button" class="remove-item text-red-500" aria-label="Eliminar patrocinador">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+    </button>
+  </div>
+</template>
+
+<template id="kit-tpl">
+  <div class="card border rounded-lg p-4 flex flex-col gap-3 bg-white shadow-sm animate-fade-up">
+    <div class="flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-1 rounded">KIT</span>
+        <h4 class="font-semibold text-sm">Artículo del kit</h4>
+      </div>
+      <button type="button" class="remove-item text-red-500" aria-label="Eliminar artículo">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+      </button>
+    </div>
+
+    <div class="space-y-1">
+      <Label class="text-[10px] uppercase text-muted-foreground">Nombre del artículo</Label>
+      <Input data-name="name" placeholder="Ej. Playera DryFit" required />
+    </div>
+
+    <div class="space-y-2">
+      <Label class="text-[10px] uppercase text-muted-foreground block">Icono</Label>
+      <!-- Populated by client bootstrap into a visual icon picker -->
+      <div data-name="kit_icon_bar" class="flex flex-wrap gap-2"></div>
+      <input type="hidden" data-name="icon" />
+    </div>
+  </div>
+</template>
+
+<template id="reg-tpl">
+  <div class="card border rounded-lg p-4 flex gap-4 items-center bg-white shadow-sm animate-fade-up">
+    <div class="flex-1 grid gap-4 md:grid-cols-2">
+      <Input data-name="location_name" placeholder="Nombre (Ej. Gimnasio Central)" required />
+      <Input data-name="address" placeholder="Dirección y Horario" />
+    </div>
+    <button type="button" class="remove-item text-red-500" aria-label="Eliminar ubicación">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+    </button>
+  </div>
+</template>

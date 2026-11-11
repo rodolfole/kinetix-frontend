@@ -1,12 +1,12 @@
 ---
-import DashboardLayout from '@layouts/DashboardLayout.astro';
+import AppShellLayout from '@layouts/AppShellLayout.astro';
 import { PageHeader } from '@features/dashboard/components';
 import { getAuthUser } from '@/lib/auth';
 
 const user = getAuthUser(Astro);
 ---
 
-<DashboardLayout title="Settings">
+<AppShellLayout title="Settings">
   <PageHeader
     title="Account Settings"
     description="Configuración de tu cuenta de organizador."
@@ -32,4 +32,4 @@ const user = getAuthUser(Astro);
       y las preferencias de tu cuenta desde aquí.
     </p>
   </div>
-</DashboardLayout>
+</AppShellLayout>

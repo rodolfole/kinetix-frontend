@@ -1,9 +1,9 @@
 ---
-import Layout from '@layouts/DashboardLayout.astro';
+import Layout from '@layouts/AppShellLayout.astro';
 import { actions } from 'astro:actions';
 
-const result = await actions.admin.listPayouts({ status: 'all' });
-const payouts = (result?.data?.data ?? []) as Array<{
+const result = await Astro.callAction(actions.admin.listPayouts, { status: 'all' });
+const payouts = (result?.data ?? []) as Array<{
   id: string;
   organizer_id: string;
   order_id: string;
@@ -14,7 +14,7 @@ const payouts = (result?.data?.data ?? []) as Array<{
   created_at: string;
   sent_at?: string;
 }>;
-const total = result?.data?.total ?? 0;
+const total = result?.error ? 0 : payouts.length;
 ---
 <Layout title="Payouts · Admin">
   <div class="space-y-6">

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
-import { IconRoute, IconX } from '@tabler/icons-react';
+import { RouteIcon, XIcon } from './icons';
 import { parseGPX, type ParsedGPX } from '@lib/gpx-parser';
 import type { RouteData } from '../types/route.type';
 
@@ -21,6 +21,16 @@ export default function DistanceRoutePreview({
   onLoaded,
   onCleared,
 }: DistanceRoutePreviewProps) {
+  // The island is mounted declaratively inside the distance `<template>` (a new
+  // card is a cloned node, so per-row props cannot be serialized). It therefore
+  // also announces what happened through bubbling window-level DOM events; the
+  // event editor script listens and fills the card's hidden `gpx_filename`.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const emit = (name: string, detail: Record<string, unknown>) => {
+    rootRef.current?.dispatchEvent(
+      new CustomEvent(name, { detail, bubbles: true, composed: true }),
+    );
+  };
   const [fileName, setFileName] = useState(initialName);
   const [parsed, setParsed] = useState<ParsedGPX | null>(null);
   const [error, setError] = useState('');
@@ -70,6 +80,7 @@ export default function DistanceRoutePreview({
       const next = parseGPX(text);
       setParsed(next);
       setFileName(f.name);
+      emit('kinetix:gpx-loaded', { name: next.name, gpxFilename: f.name });
       onLoaded?.({ name: next.name, gpxFilename: f.name, route: {
         id: `local-${next.name}`,
         event_id: '',
@@ -92,6 +103,7 @@ export default function DistanceRoutePreview({
     setFileName('');
     setError('');
     if (inputRef.current) inputRef.current.value = '';
+    emit('kinetix:gpx-cleared', { gpxFilename: '' });
     onCleared?.();
   }
 
@@ -103,7 +115,7 @@ export default function DistanceRoutePreview({
   }
 
   return (
-    <div className="space-y-3" data-react-island="distance-route-preview">
+    <div className="space-y-3" data-react-island="distance-route-preview" ref={rootRef}>
       {/* Dropzone — más compacta y consistente con el resto del form */}
       {!parsed && (
         <button
@@ -120,7 +132,7 @@ export default function DistanceRoutePreview({
         >
           <div className="flex flex-col items-center gap-2">
             <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-              <IconRoute size={20} stroke={1.75} />
+              <RouteIcon size={20} stroke={1.75} />
             </div>
             <div className="text-sm font-medium text-zinc-700">
               Arrastra el GPX aquí o haz click para elegir
@@ -146,7 +158,7 @@ export default function DistanceRoutePreview({
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs">
             <div className="flex items-center gap-2 text-emerald-700 font-medium">
-              <IconRoute size={16} stroke={2} />
+              <RouteIcon size={16} stroke={2} />
               <span className="truncate">{fileName}</span>
             </div>
             <button
@@ -155,7 +167,7 @@ export default function DistanceRoutePreview({
               className="text-zinc-500 hover:text-red-600"
               aria-label="Quitar GPX"
             >
-              <IconX size={16} />
+              <XIcon size={16} />
             </button>
           </div>
 

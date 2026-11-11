@@ -8,12 +8,12 @@ import {
   BarChart3,
   Settings,
   Ruler,
-  User,
   History,
   Trophy,
-} from "@lucide/astro";
+  Bolt,
+} from '@lucide/astro';
 import {
-  Sidebar,
+  Sidebar as SidebarRoot,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
@@ -22,48 +22,54 @@ import {
   SidebarMenuItem,
   SidebarRail,
   SidebarSeparator,
-} from "@/components/starwind/sidebar";
+} from '@/components/starwind/sidebar';
+import type { ShellMenuItem } from '@layouts/app-shell';
 
-export interface SidebarItem {
-  icon: string;
-  label: string;
-  href: string;
-  active?: boolean;
-  badge?: string;
-}
-
+/**
+ * Single sidebar for the whole app shell (organizer, participant and admin).
+ * The items come from `@layouts/app-shell` so the menu and the active item are
+ * unit tested independently of the markup.
+ */
 export interface Props {
-  items: SidebarItem[];
+  items: ShellMenuItem[];
   title?: string;
   subtitle?: string;
+  icon?: 'bolt' | 'trophy';
   class?: string;
 }
 
-const { items, title = 'Kinetix', subtitle = 'Dashboard', class: className } = Astro.props;
+const {
+  items,
+  title = 'Kinetix',
+  subtitle = 'Organizer Hub',
+  icon = 'bolt',
+  class: className,
+} = Astro.props;
 
 const iconMap: Record<string, any> = {
   'layout-dashboard': LayoutDashboard,
-  'calendar': CalendarDays,
+  calendar: CalendarDays,
   'calendar-check': CalendarCheck,
   'plus-circle': PlusCircle,
-  'users': Users,
+  users: Users,
   'bar-chart': BarChart3,
-  'settings': Settings,
-  'ruler': Ruler,
-  'user': User,
-  'history': History,
-  'trophy': Trophy,
+  settings: Settings,
+  ruler: Ruler,
+  history: History,
+  trophy: Trophy,
 };
+
+const BrandIcon = icon === 'trophy' ? Trophy : Bolt;
 ---
 
-<Sidebar collapsible="icon" class={className}>
+<SidebarRoot collapsible="icon" class={className}>
   <!-- Logo -->
   <SidebarHeader>
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton size="lg">
           <div class="bg-blue-600 text-white flex aspect-square size-10 items-center justify-center rounded-lg">
-            <Trophy class="size-5" />
+            <BrandIcon class="size-5" />
           </div>
           <div class="grid flex-1 text-left text-sm leading-tight">
             <span class="truncate font-semibold">{title}</span>
@@ -109,4 +115,4 @@ const iconMap: Record<string, any> = {
   </SidebarFooter>
 
   <SidebarRail />
-</Sidebar>
+</SidebarRoot>

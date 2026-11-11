@@ -1,0 +1,80 @@
+---
+import { Input } from '@/components/starwind/input';
+import { Label } from '@/components/starwind/label';
+import DistanceRoutePreview from '@features/events/components/DistanceRoutePreview';
+
+export interface Props {
+  distanceTypes: { id: string; name: string; km: number }[];
+  surfaces: { value: string; label: string }[];
+}
+
+const { distanceTypes, surfaces } = Astro.props;
+---
+
+<template id="distance-tpl">
+  <div
+    class="distance-card border rounded-xl p-5 bg-white shadow-sm space-y-5 animate-fade-up"
+  >
+    <div class="flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+          RACE
+        </div>
+        <h4 class="font-bold uppercase tracking-tight dist-title text-sm">
+          Nueva Distancia
+        </h4>
+      </div>
+      <button
+        type="button"
+        class="remove-item text-red-500 hover:text-red-700"
+        aria-label="Eliminar distancia"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+      </button>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="space-y-1">
+        <Label class="text-[10px] uppercase text-muted-foreground">Distancia</Label>
+        <select
+          data-name="distance_type_id"
+          class="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+        >
+          <option value="">Seleccionar…</option>
+          {distanceTypes.map((dt) => (
+            <option value={dt.id}>
+              {dt.name} ({dt.km} km)
+            </option>
+          ))}
+        </select>
+      </div>
+      <div class="space-y-1">
+        <Label class="text-[10px] uppercase text-muted-foreground">Capacidad</Label>
+        <Input type="number" data-name="capacity" placeholder="Ej. 1000" required />
+      </div>
+      <div class="space-y-1">
+        <Label class="text-[10px] uppercase text-muted-foreground">Superficie</Label>
+        <select
+          data-name="surface"
+          class="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+        >
+          {surfaces.map((s) => (
+            <option value={s.value}>{s.label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <!-- GPX drop zone: a real island (hydrates when the cloned card is visible)
+         and the hidden field the form submits, filled from its DOM events. -->
+    <div class="space-y-2">
+      <Label class="text-[10px] uppercase text-muted-foreground">
+        Ruta GPX (opcional)
+      </Label>
+      <div data-name="gpx_dropzone" class="gpx-drop-slot">
+        <DistanceRoutePreview client:visible />
+      </div>
+      <input type="hidden" data-name="gpx_filename" />
+    </div>
+  </div>
+</template>

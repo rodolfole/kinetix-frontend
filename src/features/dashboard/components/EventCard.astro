@@ -10,7 +10,8 @@ export interface Event {
   status: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
   registered: number;
   capacity: number;
-  revenue: number;
+  /** Not derivable from the current API (registrations carry no price). */
+  revenue?: number;
   image?: string;
 }
 
@@ -28,7 +29,8 @@ const statusColors: Record<Event['status'], string> = {
   cancelled: 'bg-red-500',
 };
 
-const fillPercentage = Math.round((event.registered / event.capacity) * 100);
+const fillPercentage =
+  event.capacity > 0 ? Math.round((event.registered / event.capacity) * 100) : 0;
 ---
 
 <div class="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden group hover:shadow-md transition-all">
@@ -73,7 +75,9 @@ const fillPercentage = Math.round((event.registered / event.capacity) * 100);
     </div>
 
     <div class="flex items-center justify-between pt-4 border-t">
-      <span class="text-lg font-bold">${event.revenue.toLocaleString()}</span>
+      <span class="text-lg font-bold">
+        {event.revenue != null ? `$${event.revenue.toLocaleString()}` : `${event.registered} inscritos`}
+      </span>
       <div class="flex gap-2">
         <a
           href={`/dashboard/events/${event.slug}`}

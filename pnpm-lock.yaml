@@ -32,9 +32,6 @@ importers:
       '@tabler/icons':
         specifier: ^3.44.0
         version: 3.48.0
-      '@tabler/icons-react':
-        specifier: ^3.45.0
-        version: 3.48.0(react@19.3.0)
       '@tailwindcss/forms':
         specifier: ^0.5.11
         version: 0.5.11(tailwindcss@4.3.3)
@@ -50,9 +47,6 @@ importers:
       leaflet:
         specifier: ^1.9.4
         version: 1.9.4
-      lucide:
-        specifier: ^1.7.0
-        version: 1.48.0
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
@@ -1196,11 +1190,6 @@ packages:
   '@standard-schema/utils@0.3.0':
     resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
 
-  '@tabler/icons-react@3.48.0':
-    resolution: {integrity: sha512-OCeAlpaWHEMV+EsgdVeGQ3YuKfmfnThZhc++CaZ/ujYzi5+/DONDQlX4OGvH1ikYhIfmc0grI4otJgHy7QAvng==}
-    peerDependencies:
-      react: '>= 16'
-
   '@tabler/icons@3.48.0':
     resolution: {integrity: sha512-lQk06gVHNVBnJp0UOgtth54mcZBJM7rdYKsAxKOProj1bbSAx+/xiuOWfHlyvgdL3M+Y+I0HINrjHa3ygp8eXQ==}
 
@@ -2178,9 +2167,6 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
-
-  lucide@1.48.0:
-    resolution: {integrity: sha512-8FglIlGkcIItJjJfLUiqAufUCdbtnTOsdG02/fxXd4oIt+NrcrEVH8t0ZcKAfawxHckorO5qJ9XDfnJbdf0TOg==}
 
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
@@ -3999,11 +3985,6 @@ snapshots:
 
   '@standard-schema/utils@0.3.0': {}
 
-  '@tabler/icons-react@3.48.0(react@19.3.0)':
-    dependencies:
-      '@tabler/icons': 3.48.0
-      react: 19.3.0
-
   '@tabler/icons@3.48.0': {}
 
   '@tailwindcss/forms@0.5.11(tailwindcss@4.3.3)':
@@ -4998,8 +4979,6 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
-
-  lucide@1.48.0: {}
 
   lz-string@1.5.0: {}
 

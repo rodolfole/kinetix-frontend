@@ -1,9 +1,9 @@
 ---
 import { actions } from 'astro:actions';
 import RouteUploadForm from '@features/events/components/routes/RouteUploadForm';
-import RouteList from '@features/events/components/routes/RouteList';
+import RouteList from '@features/events/components/routes/RouteList.astro';
 import { PageHeader } from '@features/dashboard/components';
-import DashboardLayout from '@layouts/DashboardLayout.astro';
+import AppShellLayout from '@layouts/AppShellLayout.astro';
 import type { BaseEvent } from '@features/events/types/event.type';
 import type { RouteData } from '@features/events/types/route.type';
 
@@ -28,7 +28,7 @@ const distancesJson = JSON.stringify(
 );
 ---
 
-<DashboardLayout title={`Rutas - ${event.name}`}>
+<AppShellLayout title={`Rutas - ${event.name}`}>
   <PageHeader
     title="Rutas del Evento"
     description={`Gestiona los recorridos para ${event.name}`}
@@ -39,16 +39,13 @@ const distancesJson = JSON.stringify(
     <RouteUploadForm
       eventId={event.id}
       distances={distancesJson}
-      client:load
+      client:visible
     />
 
     <!-- Route list -->
     <div>
       <h2 class="font-bold text-xl text-on-surface mb-4">Rutas registradas</h2>
-      <RouteList
-        routes={routesJson}
-        client:load
-      />
+      <RouteList routes={routes} />
     </div>
   </div>
-</DashboardLayout>
+</AppShellLayout>

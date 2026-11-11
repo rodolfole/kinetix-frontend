@@ -1,51 +1,71 @@
 ---
-import ParticipantLayout from '@layouts/ParticipantLayout.astro';
+import AppShellLayout from '@layouts/AppShellLayout.astro';
+import { dashboard } from '@features/dashboard/actions/dashboard.action';
+
+const overviewRes = await Astro.callAction(dashboard.getParticipantOverview, {});
+const loadError = overviewRes.error?.message ?? null;
+
+// Historial = carreras cuyo evento ya pasó. El backend no expone posición ni
+// tiempo por registro en la lista, así que se muestra sólo lo disponible.
+const now = Date.now();
+const past = (overviewRes.data?.registrations ?? [])
+  .filter((registration) => registration.eventDate && new Date(registration.eventDate).getTime() < now)
+  .sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime());
+
+const formatDate = (value: string) =>
+  value
+    ? new Date(value).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '—';
 
 const pageTitle = 'Historial de Carreras';
 ---
 
-<ParticipantLayout title={pageTitle}>
+<AppShellLayout title={pageTitle}>
   <div class="space-y-6">
     <h2 class="text-2xl font-bold">Historial de Carreras</h2>
-    
-    <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
-      <table class="w-full">
-        <thead class="bg-zinc-50 border-b">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Evento</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Distancia</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Fecha</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Tiempo</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Posición</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y">
-          <tr>
-            <td class="px-6 py-4">
-              <div class="font-medium">5K Primavera</div>
-              <div class="text-sm text-zinc-500">Parque Alameda</div>
-            </td>
-            <td class="px-6 py-4">5K</td>
-            <td class="px-6 py-4">10 Mar 2024</td>
-            <td class="px-6 py-4">00:28:45</td>
-            <td class="px-6 py-4">
-              <span class="text-green-600 font-medium">15/120</span>
-            </td>
-          </tr>
-          <tr>
-            <td class="px-6 py-4">
-              <div class="font-medium">10K Otoño</div>
-              <div class="text-sm text-zinc-500">Centro Histórico</div>
-            </td>
-            <td class="px-6 py-4">10K</td>
-            <td class="px-6 py-4">15 Sep 2024</td>
-            <td class="px-6 py-4">01:02:30</td>
-            <td class="px-6 py-4">
-              <span class="text-blue-600 font-medium">45/200</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+
+    {loadError && (
+      <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        No pudimos cargar tu historial: {loadError}
+      </div>
+    )}
+
+    {past.length === 0 ? (
+      <div class="bg-white rounded-xl border shadow-sm p-10 text-center">
+        <h3 class="font-semibold text-lg">Todavía sin carreras completadas</h3>
+        <p class="text-sm text-muted-foreground mt-1">
+          Aquí verás las carreras en las que ya participaste.
+        </p>
+      </div>
+    ) : (
+      <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-zinc-50 border-b">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Evento</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Fecha</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Dorsal</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Estado</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            {past.map((registration) => (
+              <tr>
+                <td class="px-6 py-4">
+                  <div class="font-medium">{registration.eventName || 'Evento'}</div>
+                </td>
+                <td class="px-6 py-4">{formatDate(registration.eventDate)}</td>
+                <td class="px-6 py-4">{registration.bibNumber || '—'}</td>
+                <td class="px-6 py-4">
+                  <span class="px-2 py-1 bg-zinc-100 text-zinc-700 text-xs rounded-full">
+                    {registration.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
   </div>
-</ParticipantLayout>
+</AppShellLayout>

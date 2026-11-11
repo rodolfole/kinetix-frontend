@@ -136,6 +136,40 @@ describe('DistanceRoutePreview', () => {
     expect(onLoaded).toHaveBeenCalled();
   });
 
+  it('emits kinetix:gpx-loaded from the island root (template island path)', async () => {
+    const details: any[] = [];
+    const collect = (event: Event) => details.push((event as CustomEvent).detail);
+    document.addEventListener('kinetix:gpx-loaded', collect);
+
+    render(<DistanceRoutePreview />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [makeFile(makeGpx('evento'), 'evento.gpx')] } });
+    });
+    document.removeEventListener('kinetix:gpx-loaded', collect);
+
+    expect(details).toHaveLength(1);
+    expect(details[0].gpxFilename).toBe('evento.gpx');
+  });
+
+  it('emits kinetix:gpx-cleared when the GPX is removed', async () => {
+    const details: any[] = [];
+    const collect = (event: Event) => details.push((event as CustomEvent).detail);
+    document.addEventListener('kinetix:gpx-cleared', collect);
+
+    render(<DistanceRoutePreview />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [makeFile(makeGpx(), 'r.gpx')] } });
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Quitar GPX/i }));
+    document.removeEventListener('kinetix:gpx-cleared', collect);
+
+    expect(details).toHaveLength(1);
+    expect(details[0].gpxFilename).toBe('');
+  });
+
   it('uses default name "Unnamed Route" if GPX has no <name>', async () => {
     const onLoaded = vi.fn();
     render(<DistanceRoutePreview onLoaded={onLoaded} />);

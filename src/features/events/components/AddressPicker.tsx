@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { IconSearch, IconMapPin, IconX } from '@tabler/icons-react';
+import { MapPinIcon, SearchIcon, XIcon } from './icons';
 
 /**
  * Address picker — text search only (Nominatim OpenStreetMap).
@@ -127,7 +127,7 @@ export default function AddressPicker({
 
       <div className="relative">
         <div className="absolute inset-y-0 left-3 flex items-center text-zinc-400 pointer-events-none">
-          <IconSearch size={18} stroke={1.75} />
+          <SearchIcon size={18} stroke={1.75} />
         </div>
         <input
           type="text"
@@ -145,7 +145,7 @@ export default function AddressPicker({
             onClick={clearAll}
             className="absolute inset-y-0 right-3 flex items-center text-zinc-400 hover:text-zinc-700"
           >
-            <IconX size={16} />
+            <XIcon size={16} />
           </button>
         )}
         {hits.length > 0 && (
@@ -157,7 +157,7 @@ export default function AddressPicker({
                   onClick={() => pickHit(h)}
                   className="w-full text-left px-3 py-2 hover:bg-blue-50 flex items-start gap-2 text-sm border-b border-zinc-100 last:border-b-0"
                 >
-                  <IconMapPin size={16} className="mt-1 text-blue-500 flex-shrink-0" />
+                  <MapPinIcon size={16} className="mt-1 text-blue-500 flex-shrink-0" />
                   <span className="line-clamp-2">{h.display_name}</span>
                 </button>
               </li>
@@ -173,7 +173,7 @@ export default function AddressPicker({
 
       {selected && (
         <div className="flex items-center gap-2 text-xs text-emerald-600">
-          <IconMapPin size={14} />
+          <MapPinIcon size={14} />
           Ubicación fijada ({selected.lat.toFixed(4)}, {selected.lng.toFixed(4)})
         </div>
       )}
