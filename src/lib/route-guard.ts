@@ -27,27 +27,40 @@ function isPublic(pathname: string): boolean {
  * Pure routing decision for the middleware. `user` is the validated session
  * user, or null when there is no session.
  */
+/** The middleware sees the raw URL; routing matches the decoded form. */
+const decodePath = (pathname: string): string => {
+  try {
+    const decoded = decodeURIComponent(pathname);
+    // A decoded path that escapes its origin (e.g. %2F%2Fevil.com) stays raw.
+    return decoded.startsWith('/') ? decoded : pathname;
+  } catch {
+    return pathname;
+  }
+};
+
 export function resolveAccess(pathname: string, user: SessionUser | null, search = ''): AccessDecision {
-  if (pathname.startsWith('/_astro') || pathname.startsWith('/_actions/')) return allow();
-  if (isPublic(pathname)) return allow();
+  const target = decodePath(pathname);
+
+  if (target.startsWith('/_astro') || target.startsWith('/_actions/')) return allow();
+  if (isPublic(target)) return allow();
 
   if (!user) {
-    return redirectTo(`/auth/login?redirect=${encodeURIComponent(pathname + search)}`);
+    return redirectTo(`/auth/login?redirect=${encodeURIComponent(target + search)}`);
   }
 
-  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+  if (target === '/admin' || target.startsWith('/admin/')) {
     if (user.role !== 'admin') {
       return redirectTo(user.role === 'participant' ? '/participant/dashboard' : '/dashboard');
     }
   }
 
-  if (pathname.startsWith('/participant/dashboard')) {
+  if (target.startsWith('/participant/dashboard')) {
     if (user.role !== 'participant' && user.role !== 'admin') {
       return redirectTo('/dashboard');
     }
   }
 
-  if (pathname.startsWith('/dashboard') && !pathname.startsWith('/participant/dashboard')) {
+  if (target.startsWith('/dashboard') && !target.startsWith('/participant/dashboard')) {
     if (user.role !== 'organizer' && user.role !== 'admin') {
       return redirectTo(user.role === 'participant' ? '/participant/dashboard' : '/auth/login');
     }

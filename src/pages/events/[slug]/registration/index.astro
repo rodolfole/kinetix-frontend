@@ -121,9 +121,22 @@ const profileJson = JSON.stringify(profile);
   </main>
 </MainLayout>
 
+<script>
+  import { applyFieldRequirements } from '@features/registration/lib/field-requirements';
+  import type { ParticipantFieldConfig } from '@features/registration/types/registration.type';
+
+  const config = document.getElementById('participant-fields-config');
+  const form = document.getElementById('register-form') as HTMLFormElement | null;
+  if (config && form) {
+    applyFieldRequirements(form, JSON.parse(config.textContent || '[]') as ParticipantFieldConfig[]);
+  }
+</script>
+
 <script define:vars={{ participantFieldsConfigJson, profileJson, eventId }}>
-  // Expose config, profile, and event id to window for client-side access
+  // Legacy access points kept for the submit script (registration flow)
   window.__PARTICIPANT_FIELDS_CONFIG__ = JSON.parse(participantFieldsConfigJson);
   window.__PROFILE__ = JSON.parse(profileJson);
   window.__EVENT_ID__ = eventId || '';
 </script>
+
+<script type="application/json" id="participant-fields-config" set:html={JSON.stringify(participantFieldsConfig)} />

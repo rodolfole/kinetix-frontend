@@ -39,6 +39,7 @@ describe('registration.submit', () => {
   }
   const cookiesWith = (token?: string) => ({
     get: (name: string) => (name === 'access_token' && token ? { value: token } : undefined),
+    set: vi.fn(),
   });
 
   afterEach(() => {
@@ -51,6 +52,19 @@ describe('registration.submit', () => {
       code: 'UNAUTHORIZED',
     });
     expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('sets a short-lived registration-data cookie after success', async () => {
+    const created = { id: 'r9', status: 'pending', bib_number: '0042' };
+    mockFetchOnce({ message: 'Registration created successfully', data: created });
+
+    const cookies = cookiesWith('tok');
+    await submit.handler(valid, { cookies });
+    expect(cookies.set).toHaveBeenCalledWith(
+      'registration-data',
+      expect.stringContaining('0042'),
+      expect.objectContaining({ httpOnly: true, maxAge: 900 }),
+    );
   });
 
   it('POSTs to /registrations/with-participant with the Bearer token and the backend body shape', async () => {

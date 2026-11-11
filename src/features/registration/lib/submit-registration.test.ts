@@ -4,6 +4,13 @@ import { submitRegistration, eventSlugFromPath } from './submit-registration';
 const values = { first_name: 'Ana', t_shirt_size: '', medical_conditions: '', event_id: 'e1' };
 
 describe('submitRegistration', () => {
+  it('rejects an empty slug without calling the action', async () => {
+    const submit = vi.fn();
+    const outcome = await submitRegistration(submit, { email: 'a@b.co' }, '');
+    expect(outcome).toEqual({ ok: false, message: expect.stringContaining('evento') });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
   it('calls the registration action with empty fields stripped and returns the exito redirect', async () => {
     const submit = vi.fn().mockResolvedValue({ data: { id: 'r1' }, error: undefined });
     const fetchSpy = vi.spyOn(globalThis, 'fetch');

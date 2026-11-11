@@ -8,6 +8,16 @@ const organizer = { role: 'organizer' };
 const admin = { role: 'admin' };
 
 describe('resolveAccess', () => {
+  it('treats percent-encoded paths like their decoded form', () => {
+    const organizer = { role: 'organizer' };
+    expect(resolveAccess('/%61dmin', organizer)).toEqual({ type: 'redirect', to: '/dashboard' });
+    expect(resolveAccess('/dashboard', organizer)).toEqual({ type: 'allow' });
+    expect(resolveAccess('/events/x/%72egistration', null)).toEqual({
+      type: 'redirect',
+      to: '/auth/login?redirect=%2Fevents%2Fx%2Fregistration',
+    });
+  });
+
   describe('bypass (F5)', () => {
     it('allows /_astro assets and /_actions/ calls without a session', () => {
       expect(resolveAccess('/_astro/app.js', null)).toEqual(ALLOW);

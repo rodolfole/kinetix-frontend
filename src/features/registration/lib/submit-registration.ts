@@ -13,6 +13,10 @@ export async function submitRegistration(
   values: Record<string, string>,
   slug: string,
 ): Promise<SubmitOutcome> {
+  // A missing slug means the form was mounted on an unexpected route:
+  // building `/events//registration/exito` would 404 silently.
+  if (!slug) return { ok: false, message: 'No se pudo determinar el evento de la inscripción' };
+
   const input = Object.fromEntries(Object.entries(values).filter(([, v]) => v !== ''));
   const { error } = await submit(input);
   if (error) return { ok: false, message: error.message };

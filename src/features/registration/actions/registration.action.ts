@@ -46,7 +46,20 @@ export const registration = {
       if (res.error) {
         throw new ActionError({ code: 'BAD_REQUEST', message: res.error });
       }
-      return res.data?.data ?? ({} as RegistrationResult);
+      const result = res.data?.data ?? ({} as RegistrationResult);
+
+      // Short-lived summary for the confirmation page (PLAN-11 T8). The
+      // backend is the source of truth; this is presentation data only.
+      if (result.bib_number || result.id) {
+        cookies.set('registration-data', JSON.stringify(result), {
+          path: '/',
+          httpOnly: true,
+          sameSite: 'lax',
+          maxAge: 900,
+          secure: import.meta.env.PROD,
+        });
+      }
+      return result;
     },
   }),
 };

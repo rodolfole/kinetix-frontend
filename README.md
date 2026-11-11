@@ -51,7 +51,7 @@ src/
 │   └── MainLayout.astro # Layout with Nav/Footer
 ├── lib/                  # Core utilities
 │   ├── di.ts            # Dependency injection container
-│   └── mock-data.ts     # Mock data for development
+│   ├── mock-data.ts     # format/formatDate/price helpers (name kept by convention)
 ├── pages/                # Astro pages
 │   ├── index.astro      # Home page
 │   └── eventos/
@@ -200,7 +200,7 @@ All paths use TypeScript aliases for clean imports:
 import { EventCard } from '@features/events/components';
 import { Button } from '@shared/components';
 import { MainLayout } from '@layouts/MainLayout.astro';
-import { mockEvents } from '@lib/mock-data';
+import { formatPrice } from '@lib/mock-data';
 ```
 
 ### 2. Component Composition
