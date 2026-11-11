@@ -50,6 +50,26 @@ interface BackendOrganizer {
   logo_url?: string;
 }
 
+/** List endpoints wrap their payload as `{ message, data }`. */
+interface BackendListEnvelope<T> {
+  message?: string;
+  data: T[];
+}
+
+interface BackendDistanceType {
+  id: string;
+  name: string;
+  km: number;
+}
+
+interface BackendAgeCategory {
+  id: string;
+  name: string;
+  min_age?: number;
+  max_age?: number;
+  display_order: number;
+}
+
 interface BackendEventDetail {
   message: string;
   data: BackendEvent;
@@ -304,7 +324,7 @@ export const event = {
     input: z.object({}),
     handler: async (_input, { cookies }) => {
       const accessToken = cookies.get('access_token')?.value;
-      const response = await api.get<{ id: string; name: string; km: number }[]>('/distances/types', {
+      const response = await api.get<BackendListEnvelope<BackendDistanceType>>('/distances/types', {
         headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       });
 
@@ -313,7 +333,7 @@ export const event = {
       }
 
       // El backend devuelve { message, data: [...] }, extraemos el array
-      return response.data?.data || [];
+      return response.data?.data ?? [];
     },
   }),
 
@@ -322,7 +342,7 @@ export const event = {
     input: z.object({}),
     handler: async (_input, { cookies }) => {
       const accessToken = cookies.get('access_token')?.value;
-      const response = await api.get<{ id: string; name: string; min_age?: number; max_age?: number; display_order: number }[]>('/age-categories', {
+      const response = await api.get<BackendListEnvelope<BackendAgeCategory>>('/age-categories', {
         headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       });
 
@@ -331,7 +351,7 @@ export const event = {
       }
 
       // El backend devuelve { message, data: [...] }, extraemos el array
-      return response.data?.data || [];
+      return response.data?.data ?? [];
     },
   }),
 

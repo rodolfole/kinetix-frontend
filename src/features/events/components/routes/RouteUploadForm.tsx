@@ -1,8 +1,6 @@
 import { useState, useRef, useCallback, lazy, Suspense } from 'react';
-import { parseGPX, type ParsedGPX } from './gpx-parser';
+import { parseGPX, type ParsedGPX } from '@lib/gpx-parser';
 import type { RouteData } from '../../types/route.type';
-
-const API_BASE_URL = 'http://localhost:8085/api/v1';
 
 // Lazy-loaded map preview (SSR-safe)
 const RouteMap = lazy(() => import('./RouteMap'));
@@ -22,13 +20,6 @@ interface RouteUploadFormProps {
   eventId: string;
   distances: string; // JSON serialized DistanceOption[]
   onUploaded?: (route: RouteData) => void;
-}
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
-function getAccessToken(): string | null {
-  const match = document.cookie.match(/(?:^|;\s*)access_token=([^;]*)/);
-  return match ? decodeURIComponent(match[1]) : null;
 }
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -102,24 +93,15 @@ export default function RouteUploadForm({ eventId, distances: distancesJson, onU
     setError('');
 
     try {
-      const token = getAccessToken();
-      if (!token) {
-        setError('No autenticado. Inicia sesión nuevamente.');
-        setUploading(false);
-        return;
-      }
-
       const formData = new FormData();
       formData.append('event_id', eventId);
       formData.append('file', file);
       if (name) formData.append('name', name);
       if (distanceId) formData.append('distance_id', distanceId);
 
-      const res = await fetch(`${API_BASE_URL}/routes/upload`, {
+      // Same-origin server endpoint: it attaches the httpOnly access_token cookie.
+      const res = await fetch('/api/routes/upload', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
       });
 

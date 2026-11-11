@@ -1,6 +1,6 @@
 ---
 import { formatPrice } from '@lib/mock-data';
-import type { BaseEvent, EventDistance } from '@features/events/types/event.type';
+import type { BaseEvent, EventDistanceView } from '@features/events/types/event.type';
 import { Heading } from '@shared/components';
 import { isAuthenticated } from '@/lib/auth';
 
@@ -9,6 +9,10 @@ export interface Props {
 }
 
 const { event } = Astro.props;
+
+// `EventDistanceView` adds the display extras (km, description, elevation,
+// time limit) that the event detail action already maps onto each distance.
+const distances: EventDistanceView[] = event.distances;
 
 // Verificar autenticación
 const authenticated = isAuthenticated(Astro);
@@ -34,7 +38,7 @@ const registerUrl = (distanceId: string) => authenticated
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-{event.distances.length <= 3 ? event.distances.length : 3} gap-8">
-      {event.distances.map((distance, index) => {
+      {distances.map((distance, index) => {
         const price = Math.max(0, event.pricing.basePrice + distance.priceModifier);
         const isFeatured = index === 1;
         

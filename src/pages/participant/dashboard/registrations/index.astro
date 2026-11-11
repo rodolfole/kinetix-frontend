@@ -1,55 +1,85 @@
 ---
-import ParticipantLayout from '@layouts/ParticipantLayout.astro';
+import AppShellLayout from '@layouts/AppShellLayout.astro';
+import { dashboard } from '@features/dashboard/actions/dashboard.action';
+
+const overviewRes = await Astro.callAction(dashboard.getParticipantOverview, {});
+const registrations = overviewRes.data?.registrations ?? [];
+const loadError = overviewRes.error?.message ?? null;
+
+const formatDate = (value: string) =>
+  value
+    ? new Date(value).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '—';
+
+const statusClass = (status: string) => {
+  if (status === 'confirmed') return 'bg-green-100 text-green-700';
+  if (status === 'pending') return 'bg-yellow-100 text-yellow-700';
+  if (status === 'cancelled') return 'bg-red-100 text-red-700';
+  return 'bg-zinc-100 text-zinc-700';
+};
 
 const pageTitle = 'Mis Inscripciones';
 ---
 
-<ParticipantLayout title={pageTitle}>
+<AppShellLayout title={pageTitle}>
   <div class="space-y-6">
     <h2 class="text-2xl font-bold">Mis Inscripciones</h2>
-    
-    <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
-      <table class="w-full">
-        <thead class="bg-zinc-50 border-b">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Evento</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Distancia</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Fecha</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Estado</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Acciones</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y">
-          <tr>
-            <td class="px-6 py-4">
-              <div class="font-medium">10K Valencia Marathon</div>
-              <div class="text-sm text-zinc-500">Valencia, España</div>
-            </td>
-            <td class="px-6 py-4">10K</td>
-            <td class="px-6 py-4">15 Dic 2024</td>
-            <td class="px-6 py-4">
-              <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Confirmada</span>
-            </td>
-            <td class="px-6 py-4">
-              <a href="#" class="text-blue-600 hover:underline text-sm">Ver</a>
-            </td>
-          </tr>
-          <tr>
-            <td class="px-6 py-4">
-              <div class="font-medium">Media Maratón CDMX</div>
-              <div class="text-sm text-zinc-500">Ciudad de México</div>
-            </td>
-            <td class="px-6 py-4">21K</td>
-            <td class="px-6 py-4">20 Ene 2025</td>
-            <td class="px-6 py-4">
-              <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">Pendiente</span>
-            </td>
-            <td class="px-6 py-4">
-              <a href="#" class="text-blue-600 hover:underline text-sm">Ver</a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+
+    {loadError && (
+      <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        No pudimos cargar tus inscripciones: {loadError}
+      </div>
+    )}
+
+    {registrations.length === 0 ? (
+      <div class="bg-white rounded-xl border shadow-sm p-10 text-center">
+        <h3 class="font-semibold text-lg">Sin inscripciones todavía</h3>
+        <p class="text-sm text-muted-foreground mt-1">
+          Cuando te inscribas a una carrera aparecerá en esta lista.
+        </p>
+        <a href="/events" class="mt-4 inline-block text-sm font-medium text-blue-600 hover:underline">
+          Explorar eventos
+        </a>
+      </div>
+    ) : (
+      <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-zinc-50 border-b">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Evento</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Fecha</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Dorsal</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Estado</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            {registrations.map((registration) => (
+              <tr>
+                <td class="px-6 py-4">
+                  <div class="font-medium">{registration.eventName || 'Evento'}</div>
+                </td>
+                <td class="px-6 py-4">{formatDate(registration.eventDate)}</td>
+                <td class="px-6 py-4">{registration.bibNumber || '—'}</td>
+                <td class="px-6 py-4">
+                  <span class:list={['px-2 py-1 text-xs rounded-full', statusClass(registration.status)]}>
+                    {registration.status}
+                  </span>
+                </td>
+                <td class="px-6 py-4">
+                  {registration.eventSlug ? (
+                    <a href={`/events/${registration.eventSlug}`} class="text-blue-600 hover:underline text-sm">
+                      Ver
+                    </a>
+                  ) : (
+                    <span class="text-sm text-zinc-400">—</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
   </div>
-</ParticipantLayout>
+</AppShellLayout>

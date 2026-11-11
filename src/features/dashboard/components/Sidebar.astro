@@ -1,0 +1,118 @@
+---
+import {
+  LayoutDashboard,
+  CalendarDays,
+  CalendarCheck,
+  PlusCircle,
+  Users,
+  BarChart3,
+  Settings,
+  Ruler,
+  History,
+  Trophy,
+  Bolt,
+} from '@lucide/astro';
+import {
+  Sidebar as SidebarRoot,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+  SidebarSeparator,
+} from '@/components/starwind/sidebar';
+import type { ShellMenuItem } from '@layouts/app-shell';
+
+/**
+ * Single sidebar for the whole app shell (organizer, participant and admin).
+ * The items come from `@layouts/app-shell` so the menu and the active item are
+ * unit tested independently of the markup.
+ */
+export interface Props {
+  items: ShellMenuItem[];
+  title?: string;
+  subtitle?: string;
+  icon?: 'bolt' | 'trophy';
+  class?: string;
+}
+
+const {
+  items,
+  title = 'Kinetix',
+  subtitle = 'Organizer Hub',
+  icon = 'bolt',
+  class: className,
+} = Astro.props;
+
+const iconMap: Record<string, any> = {
+  'layout-dashboard': LayoutDashboard,
+  calendar: CalendarDays,
+  'calendar-check': CalendarCheck,
+  'plus-circle': PlusCircle,
+  users: Users,
+  'bar-chart': BarChart3,
+  settings: Settings,
+  ruler: Ruler,
+  history: History,
+  trophy: Trophy,
+};
+
+const BrandIcon = icon === 'trophy' ? Trophy : Bolt;
+---
+
+<SidebarRoot collapsible="icon" class={className}>
+  <!-- Logo -->
+  <SidebarHeader>
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton size="lg">
+          <div class="bg-blue-600 text-white flex aspect-square size-10 items-center justify-center rounded-lg">
+            <BrandIcon class="size-5" />
+          </div>
+          <div class="grid flex-1 text-left text-sm leading-tight">
+            <span class="truncate font-semibold">{title}</span>
+            <span class="text-sidebar-foreground/70 truncate text-xs">{subtitle}</span>
+          </div>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  </SidebarHeader>
+
+  <SidebarSeparator />
+
+  <!-- Navigation -->
+  <SidebarContent>
+    <SidebarMenu>
+      {items.map((item) => {
+        const IconComponent = iconMap[item.icon] || LayoutDashboard;
+        return (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              href={item.href}
+              isActive={item.active || false}
+              tooltip={item.label}
+              data-active={item.active || false}
+              class="data-[active=true]:bg-blue-600 data-[active=true]:text-white"
+            >
+              <IconComponent />
+              <span>{item.label}</span>
+              {item.badge && (
+                <span class="ml-auto bg-sidebar-accent-foreground/10 text-xs px-2 py-0.5 rounded-full">
+                  {item.badge}
+                </span>
+              )}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      })}
+    </SidebarMenu>
+  </SidebarContent>
+
+  <SidebarFooter>
+    <!-- Add footer content here if needed -->
+  </SidebarFooter>
+
+  <SidebarRail />
+</SidebarRoot>

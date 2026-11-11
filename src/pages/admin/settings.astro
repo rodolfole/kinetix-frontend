@@ -1,0 +1,13 @@
+---
+import Layout from '@layouts/AppShellLayout.astro';
+import SettingsForm from '@features/admin/components/SettingsForm.astro';
+---
+<Layout title="Configuración · Admin">
+  <div class="space-y-6">
+    <header>
+      <h1 class="text-2xl font-black text-zinc-900">Configuración de la plataforma</h1>
+      <p class="text-sm text-zinc-500 mt-1">Ajustes globales que afectan a todos los organizers.</p>
+    </header>
+    <SettingsForm />
+  </div>
+</Layout>

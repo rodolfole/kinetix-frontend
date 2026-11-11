@@ -6,6 +6,7 @@ import { Label } from '@/components/starwind/label';
 import MainLayout from '@layouts/MainLayout.astro';
 import { Form } from '@shared/components/forms';
 import RequiredField from '@shared/components/forms/RequiredField.astro';
+import { resolveLoginRedirect } from '@lib/safe-redirect';
 
 // Obtener redirect desde la URL (query param) - es más confiable
 const redirectFromUrl = Astro.url.searchParams.get('redirect');
@@ -19,11 +20,8 @@ if (accessToken?.value && userCookie?.value) {
     const user = JSON.parse(userCookie.value);
     //优先使用 redirect de la URL
     if (redirectFromUrl) {
-      // Если es un event, agregar la ruta de registration
-      if (!redirectFromUrl.startsWith('/')) {
-        return Astro.redirect(`/events/${redirectFromUrl}/registration`);
-      }
-      return Astro.redirect(redirectFromUrl);
+      // Slug de evento -> registration; cualquier otro valor debe ser una ruta relativa segura
+      return Astro.redirect(resolveLoginRedirect(redirectFromUrl, user?.role === 'participant' ? '/participant/dashboard' : '/dashboard'));
     }
     if (user?.role === 'participant') {
       return Astro.redirect('/participant/dashboard');
@@ -93,6 +91,7 @@ const pageDescription = 'Ingresa a tu cuenta de Kinetix';
   import { navigate } from 'astro:transitions/client';
   import { showFieldError, clearAllFieldErrors, setupFieldErrorListeners } from '@/lib/form-utils';
   import { loginSchema } from '@/lib/validation';
+  import { resolveLoginRedirect } from '@/lib/safe-redirect';
 
   // Usar astro:page-load para ViewTransitions
   document.addEventListener('astro:page-load', () => {
@@ -132,18 +131,11 @@ const pageDescription = 'Ingresa a tu cuenta de Kinetix';
         
         const role = res.data.user?.role;
         
-        // Determinar la URL target
-        let redirectUrl = '';
-        
-        if (redirectParam) {
-          if (!redirectParam.startsWith('/')) {
-            redirectUrl = `/events/${redirectParam}/registration`;
-          } else {
-            redirectUrl = redirectParam;
-          }
-        } else {
-          redirectUrl = role === 'participant' ? '/participant/dashboard' : '/dashboard';
-        }
+        // Determinar la URL target (solo rutas relativas seguras)
+        const redirectUrl = resolveLoginRedirect(
+          redirectParam,
+          role === 'participant' ? '/participant/dashboard' : '/dashboard'
+        );
 
         // Full redirect para que el middleware vea las cookies
         navigate(redirectUrl);

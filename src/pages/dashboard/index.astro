@@ -2,134 +2,92 @@
 import { Button } from '@/components/starwind/button';
 import { Badge } from '@/components/starwind/badge';
 import { PageHeader, StatCard, EventCard } from '@features/dashboard/components';
-import DashboardLayout from '@layouts/DashboardLayout.astro';
+import { dashboard } from '@features/dashboard/actions/dashboard.action';
+import AppShellLayout from '@layouts/AppShellLayout.astro';
 
-// Mock data - in production, load from API
-const stats = {
-  totalEvents: 12,
-  activeEvents: 5,
-  totalParticipants: 3847,
-  totalRevenue: 185420,
-  revenueChange: 12.5,
-  participantsChange: 8.3,
-  eventsChange: 15.2,
-};
+// Real data: the action aggregates `/events` + `/registrations?event_id=` (§T6).
+const overviewRes = await Astro.callAction(dashboard.getOrganizerOverview, { recentLimit: 4 });
+const overview = overviewRes.data ?? null;
+const loadError = overviewRes.error?.message ?? null;
 
-const recentEvents = [
-  {
-    id: 'event-001',
-    slug: '10k-valencia-marathon',
-    name: '10K Valencia Marathon',
-    date: '2024-12-01T08:00:00Z',
-    location: 'Ciudad de las Artes, Valencia',
-    status: 'published' as const,
-    registered: 8500,
-    capacity: 10000,
-    revenue: 382500,
-  },
-  {
-    id: 'event-002',
-    slug: 'neon-dash-10k',
-    name: 'The Neon Dash',
-    date: '2024-10-24T20:00:00Z',
-    location: 'Downtown Metro',
-    status: 'ongoing' as const,
-    registered: 1450,
-    capacity: 1500,
-    revenue: 65250,
-  },
-  {
-    id: 'event-003',
-    slug: 'coastal-elite-half',
-    name: 'Coastal Elite Half',
-    date: '2024-11-12T06:30:00Z',
-    location: 'Pacific Highway, CA',
-    status: 'published' as const,
-    registered: 2145,
-    capacity: 3000,
-    revenue: 182325,
-  },
-  {
-    id: 'event-004',
-    slug: 'summit-peak-trail',
-    name: 'Summit Peak Trail',
-    date: '2024-12-05T05:00:00Z',
-    location: 'Alpine Ridge Trail, CO',
-    status: 'draft' as const,
-    registered: 0,
-    capacity: 800,
-    revenue: 0,
-  },
-];
+const stats = overview?.stats ?? { totalEvents: 0, activeEvents: 0, totalRegistrations: 0 };
+const recentEvents = overview?.recentEvents ?? [];
+const deadlines = overview?.deadlines ?? [];
+const distanceDistribution = overview?.distanceDistribution ?? [];
+const isEmpty = recentEvents.length === 0;
 
-const upcomingDeadlines = [
-  { event: '10K Valencia Marathon', date: '15 Nov 2024', type: 'Early bird ends' },
-  { event: 'The Neon Dash', date: '20 Oct 2024', type: 'Registration closes' },
-  { event: 'Coastal Elite Half', date: '01 Nov 2024', type: 'Kit pickup starts' },
-];
+const formatDeadline = (value: string) =>
+  new Date(value).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
 ---
 
-<DashboardLayout title="Dashboard">
-  <PageHeader 
-    title="Welcome back, Carlos" 
-    description="Here's a summary of your events performance."
+<AppShellLayout title="Dashboard">
+  <PageHeader
+    title="Resumen"
+    description="Estos son los números reales de tus eventos."
   />
 
+  {loadError && (
+    <div class="mb-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+      No pudimos cargar tus eventos: {loadError}
+    </div>
+  )}
+
   <!-- Stats Grid -->
-  <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+  <div class="grid gap-6 md:grid-cols-3 mb-8">
     <StatCard
-      title="Active Events"
-      value={stats.activeEvents}
-      description={`Of ${stats.totalEvents} total`}
+      title="Eventos"
+      value={stats.totalEvents}
+      description="Creados en tu cuenta"
       icon="calendar"
-      trend={{ value: stats.eventsChange, positive: true }}
     />
     <StatCard
-      title="Total Participants"
-      value={stats.totalParticipants.toLocaleString()}
-      description="All events"
-      icon="users"
-      trend={{ value: stats.participantsChange, positive: true }}
-    />
-    <StatCard
-      title="Total Revenue"
-      value={`$${stats.totalRevenue.toLocaleString()}`}
-      description="MXN accumulated"
-      icon="dollar-sign"
-      trend={{ value: stats.revenueChange, positive: true }}
-    />
-    <StatCard
-      title="Occupancy Rate"
-      value="78%"
-      description="General average"
+      title="Eventos publicados"
+      value={stats.activeEvents}
+      description={`De ${stats.totalEvents} en total`}
       icon="trending-up"
+    />
+    <StatCard
+      title="Inscripciones"
+      value={stats.totalRegistrations.toLocaleString('es-MX')}
+      description="En todos tus eventos"
+      icon="users"
     />
   </div>
 
   <!-- Main Content Grid -->
   <div class="grid gap-8 lg:grid-cols-3">
-    
+
     <!-- Events List -->
     <div class="lg:col-span-2">
       <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-semibold">Recent Events</h2>
+        <h2 class="text-xl font-semibold">Eventos recientes</h2>
         <Button variant="outline" size="sm" href="/dashboard/events">
-          View all
+          Ver todos
           <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path d="M9 18l6-6-6-6" />
           </svg>
         </Button>
       </div>
 
-      <div class="grid gap-4 sm:grid-cols-2">
-        {recentEvents.map((event) => (
-          <EventCard event={event} />
-        ))}
-      </div>
+      {isEmpty ? (
+        <div class="rounded-xl border-2 border-dashed border-zinc-300 p-10 text-center">
+          <h3 class="font-semibold text-lg">Aún no tienes eventos</h3>
+          <p class="text-sm text-muted-foreground mt-1">
+            Crea tu primera carrera para ver aquí sus inscripciones y ocupación.
+          </p>
+          <Button href="/dashboard/events/new" class="mt-4">Crear evento</Button>
+        </div>
+      ) : (
+        <div class="grid gap-4 sm:grid-cols-2">
+          {recentEvents.map((event) => (
+            <EventCard event={event} />
+          ))}
+        </div>
+      )}
 
       <!-- Quick Action -->
       <div class="mt-6">
-        <a 
+        <a
           href="/dashboard/events/new"
           class="flex items-center justify-center gap-2 w-full p-6 border-2 border-dashed border-zinc-300 rounded-xl hover:border-blue-500 hover:bg-blue-50/50 transition-all group"
         >
@@ -138,7 +96,7 @@ const upcomingDeadlines = [
               <path d="M12 5v14M5 12h14" />
             </svg>
           </div>
-          <span class="font-medium text-zinc-500 group-hover:text-blue-600 transition-colors">Create new event</span>
+          <span class="font-medium text-zinc-500 group-hover:text-blue-600 transition-colors">Crear evento</span>
         </a>
       </div>
     </div>
@@ -152,76 +110,49 @@ const upcomingDeadlines = [
             <circle cx="12" cy="12" r="10" />
             <path d="M12 6v6l4 2" />
           </svg>
-          <h3 class="font-semibold">Upcoming Deadlines</h3>
+          <h3 class="font-semibold">Próximos cierres</h3>
         </div>
-        <div class="space-y-4">
-          {upcomingDeadlines.map((deadline) => (
-            <div class="flex items-start gap-3 pb-4 last:pb-0 border-b last:border-0">
-              <div class="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
-              <div class="flex-1">
-                <p class="text-sm font-medium">{deadline.event}</p>
-                <div class="flex items-center gap-2 mt-1">
-                  <Badge variant="secondary" class="text-[10px]">{deadline.type}</Badge>
-                  <span class="text-xs text-muted-foreground">{deadline.date}</span>
+        {deadlines.length === 0 ? (
+          <p class="text-sm text-muted-foreground">
+            Sin fechas límite de inscripción próximas.
+          </p>
+        ) : (
+          <div class="space-y-4">
+            {deadlines.map((deadline) => (
+              <div class="flex items-start gap-3 pb-4 last:pb-0 border-b last:border-0">
+                <div class="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div class="flex-1">
+                  <p class="text-sm font-medium">{deadline.event}</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <Badge variant="secondary" class="text-[10px]">{deadline.type}</Badge>
+                    <span class="text-xs text-muted-foreground">{formatDeadline(deadline.date)}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      <!-- Quick Stats -->
+      <!-- Distance Distribution -->
       <div class="rounded-xl border bg-card text-card-foreground shadow-sm p-6">
-        <h3 class="font-semibold mb-4">Distance Distribution</h3>
-        <div class="space-y-3">
-          {[
-            { label: '5K', count: 3, color: 'bg-green-500' },
-            { label: '10K', count: 5, color: 'bg-blue-500' },
-            { label: '21K Half Marathon', count: 3, color: 'bg-purple-500' },
-            { label: '42K Marathon', count: 1, color: 'bg-orange-500' },
-          ].map((item) => (
-            <div class="flex items-center gap-3">
-              <div class:list={["w-3 h-3 rounded-full", item.color]}></div>
-              <span class="text-sm flex-1">{item.label}</span>
-              <span class="text-sm font-medium">{item.count}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <!-- Performance -->
-      <div class="rounded-xl border bg-card text-card-foreground shadow-sm p-6">
-        <h3 class="font-semibold mb-4">Monthly Performance</h3>
-        <div class="space-y-4">
-          <div>
-            <div class="flex justify-between text-sm mb-1">
-              <span class="text-muted-foreground">Registration vs Goal</span>
-              <span class="font-medium">78%</span>
-            </div>
-            <div class="w-full bg-zinc-100 rounded-full h-2">
-              <div class="bg-blue-500 h-full rounded-full" style="width: 78%"></div>
-            </div>
+        <h3 class="font-semibold mb-4">Distancias configuradas</h3>
+        {distanceDistribution.length === 0 ? (
+          <p class="text-sm text-muted-foreground">
+            Todavía no hay distancias cargadas en tus eventos.
+          </p>
+        ) : (
+          <div class="space-y-3">
+            {distanceDistribution.map((item) => (
+              <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span class="text-sm flex-1">{item.label}</span>
+                <span class="text-sm font-medium">{item.count}</span>
+              </div>
+            ))}
           </div>
-          <div>
-            <div class="flex justify-between text-sm mb-1">
-              <span class="text-muted-foreground">Satisfaction</span>
-              <span class="font-medium">4.8/5.0</span>
-            </div>
-            <div class="w-full bg-zinc-100 rounded-full h-2">
-              <div class="bg-green-500 h-full rounded-full" style="width: 96%"></div>
-            </div>
-          </div>
-          <div>
-            <div class="flex justify-between text-sm mb-1">
-              <span class="text-muted-foreground">Retention</span>
-              <span class="font-medium">85%</span>
-            </div>
-            <div class="w-full bg-zinc-100 rounded-full h-2">
-              <div class="bg-purple-500 h-full rounded-full" style="width: 85%"></div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   </div>
-</DashboardLayout>
+</AppShellLayout>

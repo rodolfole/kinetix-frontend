@@ -1,0 +1,70 @@
+---
+import { actions } from 'astro:actions';
+
+const result = Astro.getActionResult(actions.admin.getConfig);
+const current = (result?.data as { commission_pct?: number; updated_at?: string } | undefined) ?? null;
+const initial = current?.commission_pct ?? 10;
+
+let errorMsg: string | null = null;
+if (Astro.getActionResult(actions.admin.updateConfig)?.error) {
+  errorMsg = String(Astro.getActionResult(actions.admin.updateConfig)?.error);
+}
+const updated = Astro.getActionResult(actions.admin.updateConfig)?.data as
+  | { commission_pct: number }
+  | undefined;
+---
+<section class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm max-w-md space-y-4">
+  <header>
+    <h2 class="text-lg font-bold text-zinc-900">Comisión de la plataforma</h2>
+    <p class="text-xs text-zinc-500 mt-1">
+      Porcentaje retenido por la plataforma en cada pago. 0% = sin comisión. 100% = todo se retiene.
+    </p>
+  </header>
+
+  {updated && (
+    <p class="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md p-3">
+      Comisión actualizada a <strong>{updated.commission_pct}%</strong>.
+    </p>
+  )}
+  {errorMsg && (
+    <p class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md p-3" role="alert">
+      {errorMsg}
+    </p>
+  )}
+
+  <form method="POST" action={actions.admin.updateConfig} class="space-y-3">
+    <label class="block">
+      <span class="text-xs uppercase text-zinc-500">Comisión (%)</span>
+      <input
+        type="number"
+        name="commission_pct"
+        min="0"
+        max="100"
+        step="0.01"
+        required
+        value={initial}
+        class="mt-1 w-full h-10 rounded-md border border-zinc-200 px-3 text-sm"
+      />
+    </label>
+    <label class="block">
+      <span class="text-xs uppercase text-zinc-500">Tu identificador (admin)</span>
+      <input
+        type="text"
+        name="updated_by"
+        required
+        placeholder="admin@kinetix.com"
+        class="mt-1 w-full h-10 rounded-md border border-zinc-200 px-3 text-sm"
+      />
+    </label>
+    <button
+      type="submit"
+      class="w-full h-10 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
+    >
+      Guardar
+    </button>
+  </form>
+
+  {current?.updated_at && (
+    <p class="text-[11px] text-zinc-400">Última actualización: {current.updated_at}</p>
+  )}
+</section>

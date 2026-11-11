@@ -1,0 +1,83 @@
+---
+import Layout from '@layouts/AppShellLayout.astro';
+import { actions } from 'astro:actions';
+
+const result = await Astro.callAction(actions.admin.listPayouts, { status: 'all' });
+const payouts = (result?.data ?? []) as Array<{
+  id: string;
+  organizer_id: string;
+  order_id: string;
+  amount_cents: number;
+  currency: string;
+  commission_pct: number;
+  status: string;
+  created_at: string;
+  sent_at?: string;
+}>;
+const total = result?.error ? 0 : payouts.length;
+---
+<Layout title="Payouts · Admin">
+  <div class="space-y-6">
+    <header class="flex items-baseline justify-between">
+      <div>
+        <h1 class="text-2xl font-black text-zinc-900">Payouts a organizers</h1>
+        <p class="text-sm text-zinc-500 mt-1">Pagos pendientes después de la comisión de la plataforma.</p>
+      </div>
+      <a href="/admin/settings" class="text-sm text-blue-600 hover:underline">Configurar comisión</a>
+    </header>
+
+    <div class="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-zinc-50 text-xs uppercase text-zinc-500">
+          <tr>
+            <th class="text-left px-4 py-2">Status</th>
+            <th class="text-left px-4 py-2">Order ID</th>
+            <th class="text-left px-4 py-2">Organizer</th>
+            <th class="text-right px-4 py-2">Neto</th>
+            <th class="text-right px-4 py-2">Comisión</th>
+            <th class="text-left px-4 py-2">Currency</th>
+            <th class="text-left px-4 py-2">Created</th>
+            <th class="text-left px-4 py-2">Sent</th>
+          </tr>
+        </thead>
+        <tbody>
+          {payouts.length === 0 && (
+            <tr><td colspan="7" class="text-center text-zinc-400 py-6">Sin payouts aún.</td></tr>
+          )}
+          {payouts.map((p) => (
+            <tr class="border-t border-zinc-100">
+              <td class="px-4 py-2">
+                <span class:list={[
+                  'inline-block px-2 py-0.5 rounded text-xs font-semibold',
+                  p.status === 'sent' ? 'bg-emerald-100 text-emerald-700'
+                    : p.status === 'failed' ? 'bg-red-100 text-red-700'
+                    : 'bg-amber-100 text-amber-700',
+                ]}>
+                  {p.status}
+                </span>
+              </td>
+              <td class="px-4 py-2 font-mono text-xs text-zinc-500">{p.order_id.slice(0, 8)}…</td>
+              <td class="px-4 py-2 font-mono text-xs text-zinc-500">{p.organizer_id.slice(0, 8)}…</td>
+              <td class="px-4 py-2 text-right font-semibold">
+                ${(p.amount_cents / 100).toFixed(2)}
+              </td>
+              <td class="px-4 py-2 text-right text-zinc-500">
+                {p.commission_pct}%
+              </td>
+              <td class="px-4 py-2 text-zinc-500">{p.currency}</td>
+              <td class="px-4 py-2 text-xs text-zinc-500">
+                {new Date(p.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+              </td>
+              <td class="px-4 py-2 text-xs text-zinc-500">
+                {p.sent_at
+                  ? new Date(p.sent_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })
+                  : '—'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-xs text-zinc-400">Total: {total}</p>
+  </div>
+</Layout>

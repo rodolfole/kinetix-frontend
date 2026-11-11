@@ -10,9 +10,10 @@ Kinetix is a **running events platform** connecting athletes with race events.
 | :------------- | :------------------------------------ |
 | `auth`         | User authentication (register, login) |
 | `registration` | Multi-step race registration flow     |
-| `events`       | Event listing, details, pricing       |
+| `events`       | Event listing, details, GPX routes, editor islands |
 | `home`         | Landing page with search              |
-| `dashboard`    | User dashboard with stats             |
+| `dashboard`    | Organizer dashboard and event editor  |
+| `admin`        | Platform commission and payouts       |
 
 ---
 
@@ -26,7 +27,7 @@ features/
   <feature>/
     actions/      - Astro actions
     schemas/      - Zod schemas for input validation
-    services/     - Business logic, DB queries, or external API calls
+    lib/          - Pure helpers and mappers of the feature
     types/        - Interfaces
     components/   - .astro components
 layouts/          - Page templates and master layouts
@@ -58,7 +59,7 @@ Defined in `tsconfig.json`:
 
 | Tool     | Version | Notes                                                    |
 | :------- | :------ | :------------------------------------------------------- |
-| Astro    | 6.x     | Server-side rendering (`output: 'server'`)               |
+| Astro    | 7.x     | Server-side rendering (`output: 'server'`, node adapter) |
 | React    | 19.x    | Islands only for interactive components                  |
 | Tailwind | 4.x     | Uses `@tailwindcss/vite` plugin, NOT `@astrojs/tailwind` |
 | Starwind | latest  | UI component library                                     |
@@ -92,12 +93,11 @@ import { actions } from "astro:actions";
 const result = await actions.registration.submit(formData);
 ```
 
-## Backend (Planned)
+## Backend
 
-Go backend with:
-- Vertical Slice Architecture
-- PostgreSQL + sqlc + goose
-- Store pattern for data access
+The Go backend lives in the sibling repo (`../backend`), documented in its own
+`docs/` (API contract, ADRs, plans). The frontend calls it through Astro Actions
+only; the browser never hits the API directly.
 
 
 ## Don'ts

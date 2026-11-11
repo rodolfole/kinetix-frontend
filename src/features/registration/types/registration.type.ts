@@ -1,58 +1,38 @@
-export type RegistrationStep = 'personal' | 'race';
+/**
+ * Per-event participant field config as returned by the event detail payload.
+ * TODO(PLAN-11 T2): confirm the backend contract (`field_name` vs `section_name`).
+ */
+export interface ParticipantFieldConfig {
+  field_name: string;
+  is_enabled: boolean;
+  is_required: boolean;
+}
 
 export interface PersonalInfo {
-  nombre: string;
-  paterno: string;
-  materno?: string;
-  sexo: 'masculino' | 'femenino' | 'otro';
-  nacimiento: string;
+  first_name: string;
+  last_name: string;
+  second_last_name: string;
+  birth_date: string;
+  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  phone: string;
   email: string;
-  confirmEmail: string;
-  telefono: string;
-  pais: string;
-  estado: string;
-  cp: string;
 }
 
 export interface RaceInfo {
-  distanceId: string;
-  category: string;
-  estimatedTime: string;
-  team?: string;
-  shirtSize: 'S' | 'M' | 'L' | 'XL';
+  event_id: string;
+  distance_id: string;
+  bib_number?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
 }
 
-export interface RegistrationData {
-  eventId: string;
-  personalInfo: PersonalInfo;
-  raceInfo: RaceInfo;
-  currentStep: RegistrationStep;
+export interface RegistrationPayload extends PersonalInfo, RaceInfo {
+  t_shirt_size?: string;
+  medical_conditions?: string;
 }
 
-export interface Distance {
+export interface RegistrationResult {
   id: string;
-  name: string;
-  description: string;
+  status: string;
+  bib_number?: string;
 }
-
-export interface Category {
-  value: string;
-  label: string;
-  minAge: number;
-  maxAge: number;
-}
-
-export const DISTANCES: Distance[] = [
-  { id: '5k', name: '5K', description: 'Recreativa' },
-  { id: '10k', name: '10K', description: 'Competitiva' },
-  { id: '42k', name: '42K', description: 'Maratón' },
-];
-
-export const CATEGORIES: Category[] = [
-  { value: 'juvenil', label: 'Juvenil (15-19 años)', minAge: 15, maxAge: 19 },
-  { value: 'libre', label: 'Libre (20-39 años)', minAge: 20, maxAge: 39 },
-  { value: 'master', label: 'Master (40-49 años)', minAge: 40, maxAge: 49 },
-  { value: 'veteranos', label: 'Veteranos (50+ años)', minAge: 50, maxAge: 99 },
-];
-
-export const SHIRT_SIZES = ['S', 'M', 'L', 'XL'] as const;

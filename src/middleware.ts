@@ -1,77 +1,45 @@
 import { defineMiddleware } from 'astro:middleware';
-
-const PUBLIC_ROUTES = ['/', 'auth/login', 'auth/register', 'events', 'results', 'community'];
-
-// User cookie schema for validation
-interface UserCookie {
-  role: string;
-  id?: string;
-  email?: string;
-}
+import { resolveAccess, type SessionUser } from '@lib/route-guard';
 
 // Valid roles
 const VALID_ROLES = ['participant', 'organizer', 'admin'];
 
 // Validate user cookie structure
-function isValidUserCookie(obj: unknown): obj is UserCookie {
+function isValidUserCookie(obj: unknown): obj is SessionUser {
   if (!obj || typeof obj !== 'object') return false;
-  const user = obj as UserCookie;
+  const user = obj as SessionUser;
   return typeof user.role === 'string' && VALID_ROLES.includes(user.role);
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { url, cookies, redirect } = context;
-  const { pathname } = url;
+  const { pathname, search } = url;
 
-  // 1. PRIORIDAD: Dejar pasar acciones de autenticación y recursos estáticos
-  if (pathname.startsWith('/_astro') || pathname.includes('actions')) {
-    return next();
-  }
+  // 1. Bypass y rutas públicas: no requieren sesión ni parsear cookies
+  if (resolveAccess(pathname, null, search).type === 'allow') return next();
 
-  // 2. RUTAS PÚBLICAS: Normalización robusta
-  const cleanPath = pathname.replace(/^\/|\/$/g, '') || '/';
-  const isPublic = PUBLIC_ROUTES.some(route => {
-    const cleanRoute = route.replace(/^\/|\/$/g, '') || '/';
-    return cleanPath === cleanRoute || cleanPath.startsWith(cleanRoute + '/');
-  });
-
-  if (isPublic) return next();
-
-  // 3. VALIDACIÓN DE SESIÓN: Si llegamos aquí, la ruta es PRIVADA
+  // 2. VALIDACIÓN DE SESIÓN: Si llegamos aquí, la ruta es PRIVADA
   const accessToken = cookies.get('access_token')?.value;
   const userRaw = cookies.get('user')?.value;
 
-  if (!accessToken || !userRaw) {
-    return redirect(`/auth/login?redirect=${pathname}`);
-  }
-
-  // 4. PARSEO SEGURO Y VALIDACIÓN DE ROLES
-  let user: UserCookie;
-  try {
-    const parsed = JSON.parse(userRaw);
-    if (!isValidUserCookie(parsed)) {
-      throw new Error('Invalid user cookie structure');
-    }
-    user = parsed;
-  } catch (e) {
-    // Cookie corrupta o estructura inválida — limpiar y redirigir
-    cookies.delete('access_token', { path: '/' });
-    cookies.delete('user', { path: '/' });
-    return redirect('/auth/login');
-  }
-
-  // 5. REDIRECCIONES CRUZADAS POR ROLES
-  if (pathname.startsWith('/participant/dashboard')) {
-    if (user.role !== 'participant' && user.role !== 'admin') {
-      return redirect('/dashboard');
+  let user: SessionUser | null = null;
+  if (accessToken && userRaw) {
+    try {
+      const parsed = JSON.parse(userRaw);
+      if (!isValidUserCookie(parsed)) {
+        throw new Error('Invalid user cookie structure');
+      }
+      user = parsed;
+    } catch (e) {
+      // Cookie corrupta o estructura inválida — limpiar y redirigir
+      cookies.delete('access_token', { path: '/' });
+      cookies.delete('user', { path: '/' });
+      return redirect('/auth/login');
     }
   }
 
-  if (pathname.startsWith('/dashboard') && !pathname.startsWith('/participant/dashboard')) {
-    if (user.role !== 'organizer' && user.role !== 'admin') {
-      return redirect(user.role === 'participant' ? '/participant/dashboard' : '/auth/login');
-    }
-  }
-
+  // 3. Decisión de acceso (login requerido, rol admin, redirecciones por rol)
+  const decision = resolveAccess(pathname, user, search);
+  if (decision.type === 'redirect') return redirect(decision.to);
   return next();
 });

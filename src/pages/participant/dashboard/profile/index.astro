@@ -1,12 +1,12 @@
 ---
-import ParticipantLayout from '@layouts/ParticipantLayout.astro';
+import AppShellLayout from '@layouts/AppShellLayout.astro';
 import { getAuthUser } from '@/lib/auth';
 
 const user = getAuthUser(Astro);
 const pageTitle = 'Mi Perfil';
 ---
 
-<ParticipantLayout title={pageTitle}>
+<AppShellLayout title={pageTitle}>
   <div class="space-y-6">
     <h2 class="text-2xl font-bold">Mi Perfil</h2>
     
@@ -47,4 +47,4 @@ const pageTitle = 'Mi Perfil';
       </div>
     </div>
   </div>
-</ParticipantLayout>
+</AppShellLayout>
